@@ -16,17 +16,21 @@ class Game {
     private world: World;
 
     /** The player instance controlled by the user. */
-    private player: Player;
+    private player?: Player;
 
     /**
      * Creates a new game instance.
+     * - If no player is provided, adds OrbitControl to the camera.
      * 
      * @param world - The `World` instance containing chunks and terrain.
      * @param player - The `Player` instance controlled by the user.
      */
-    constructor(world: World, player: Player) {
+    constructor(world: World, player?: Player) {
         this.world = world;
         this.player = player;
+        if (!player) {
+            Camera.addOrbitControls();
+        }
     }
 
     /**
