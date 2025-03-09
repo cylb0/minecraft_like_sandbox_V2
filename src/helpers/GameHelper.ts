@@ -1,4 +1,4 @@
-import { AxesHelper, BoxGeometry, Mesh, MeshBasicMaterial } from "three";
+import { AxesHelper, BoxGeometry, Mesh, MeshLambertMaterial } from "three";
 import GameScene from "@/core/scene/GameScene";
 import { BLOCK_SIZE } from "@/constants/block";
 
@@ -11,7 +11,7 @@ class GameHelper {
      */
     public static displayExampleCube(): void {
         const geometry = new BoxGeometry(BLOCK_SIZE);
-        const material = new MeshBasicMaterial({ color: 0x00ff00 });
+        const material = new MeshLambertMaterial({ color: 0x00ff00 });
         const cube = new Mesh(geometry, material);
         GameScene.scene.add(cube);
     }
