@@ -1,4 +1,4 @@
-import Scene from "@/core/scene/GameScene";
+import { Scene } from "three";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
