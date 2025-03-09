@@ -16,7 +16,7 @@ class Renderer {
     static {
         this.#renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.#renderer.domElement);
-        window.addEventListener('resize', Renderer.#onResize)
+        window.addEventListener('resize', Renderer.#onResize.bind(Renderer));
     }
 
     /**
