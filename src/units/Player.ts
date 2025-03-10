@@ -1,7 +1,7 @@
 import { PLAYER_DIMENSIONS, PLAYER_SPAWN_POSITION } from "@/constants/player";
 import IMovable from "@/interfaces/IMovable";
 import World from "@/world/World";
-import { BoxGeometry, Group, Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera, Scene, Vector3 } from "three";
+import { BoxGeometry, Group, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, Scene, Vector3 } from "three";
 
 class Player implements IMovable {
     #camera: PerspectiveCamera
@@ -29,7 +29,7 @@ class Player implements IMovable {
 
         this.#object = playerGroup;
         this.#object.position.copy(new Vector3(PLAYER_SPAWN_POSITION.x, PLAYER_SPAWN_POSITION.y, PLAYER_SPAWN_POSITION.z));
-        this.#object.add(camera)
+        this.#object.add(camera);
 
         this.#addToScene();
     }
@@ -55,7 +55,7 @@ class Player implements IMovable {
      */
     #createPlayer(): Mesh {
         const playerGeometry = new BoxGeometry(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth);
-        const playerMaterial = new MeshStandardMaterial({ color: 0x0000ff });
+        const playerMaterial = new MeshBasicMaterial({ color: 0x0000ff });
         return new Mesh(playerGeometry, playerMaterial);
     }
 

@@ -10,4 +10,4 @@ import { CHUNK_DIMENSIONS } from "@/constants/world";
 export const PLAYER_DIMENSIONS = { width: .5, height: 2, depth: .5 };
 
 /** Defines the player's base spawn position in the world. */
-export const PLAYER_SPAWN_POSITION = { x: -5, y: CHUNK_DIMENSIONS.depth, z: -5 };
+export const PLAYER_SPAWN_POSITION = { x: 0, y: 0, z: 0 };

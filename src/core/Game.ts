@@ -1,9 +1,10 @@
+import Stats from 'three/examples/jsm/libs/stats.module.js';
 import Camera from '@/core/scene/Camera';
 import GameScene from '@/core/scene/GameScene';
 import Player from '@/units/Player';
 import Renderer from '@/core/scene/Renderer';
-import Stats from 'three/examples/jsm/libs/stats.module';
 import World from "@/world/World";
+import { Vector3 } from 'three';
 
 /**
  * Manages the game logic, rendering and utilities.
@@ -29,7 +30,7 @@ class Game {
         this.world = world;
         this.player = player;
         if (!player) {
-            Camera.addOrbitControls();
+            Camera.addOrbitControls(new Vector3(2, 2, 2));
         }
     }
 

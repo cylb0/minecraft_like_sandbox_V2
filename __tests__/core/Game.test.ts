@@ -1,4 +1,7 @@
 jest.mock("three");
+jest.mock("three/examples/jsm/libs/stats.module");
+jest.mock("three/examples/jsm/controls/OrbitControls");
+
 import Camera from "@/core/scene/Camera";
 import Game from "@/core/Game";
 import GameScene from "@/core/scene/GameScene";
@@ -7,12 +10,6 @@ import World from "@/world/World";
 
 jest.mock("@/units/Player");
 jest.mock("@/world/World");
-
-jest.mock("three/examples/jsm/libs/stats.module", () => {
-    return jest.fn(() => ({
-        dom: document.createElement("div"),
-    }));
-});
 
 describe("Game class", () => {
     let game: Game;
