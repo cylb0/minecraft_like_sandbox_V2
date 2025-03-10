@@ -1,10 +1,14 @@
+import { BLOCK_SIZE } from "@/constants/block";
 import { CHUNK_DIMENSIONS, WORLD_SIZE } from "@/constants/world";
-import { AmbientLight, ColorRepresentation, DirectionalLight, Scene, Vector3 } from "three";
+import { AmbientLight, BoxGeometry, ColorRepresentation, DirectionalLight, Group, Mesh, MeshLambertMaterial, Scene, Vector3 } from "three";
+
+const geometry = new BoxGeometry(BLOCK_SIZE);
+const material = new MeshLambertMaterial({ color: 0x00ff00 });
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
  */
-class World {
+class World extends Group {
     /** The `THREE.Scene` scene where the world is rendered. */
     #scene: Scene;
 
@@ -18,8 +22,22 @@ class World {
      * @param seed - Unique seed used for noise generation.
      */
     constructor(scene: Scene, seed: number) {
+        super();
         this.#scene = scene;
         this.#seed = seed;
+    }
+
+    generateBasicWorld() {
+        const halfWorldSize = WORLD_SIZE * CHUNK_DIMENSIONS.size / 2;
+        for (let x = -halfWorldSize; x < halfWorldSize; x++) {
+            for (let y = 0; y < CHUNK_DIMENSIONS.depth; y++) {
+                for (let z = -halfWorldSize; z < halfWorldSize; z++) {
+                    const block = new Mesh(geometry, material);
+                    block.position.set(x, y, z);
+                    this.add(block);
+                }
+            }
+        } 
     }
 
     /**
@@ -47,12 +65,12 @@ class World {
         shadow?: boolean;
     } = {}) {
         const ambientLight  = new AmbientLight(color, intensity)
-        this.#scene.add(ambientLight);
+        this.add(ambientLight);
 
         const sunLight = new DirectionalLight(color, intensity);
         sunLight.position.copy(position);
         sunLight.castShadow = shadow;
-        this.#scene.add(sunLight);
+        this.add(sunLight);
     }
 }
 

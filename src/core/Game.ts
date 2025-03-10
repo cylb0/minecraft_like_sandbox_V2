@@ -5,6 +5,7 @@ import Player from '@/units/Player';
 import Renderer from '@/core/scene/Renderer';
 import World from "@/world/World";
 import { Vector3 } from 'three';
+import { CHUNK_DIMENSIONS, WORLD_SIZE } from '@/constants/world';
 
 /**
  * Manages the game logic, rendering and utilities.
@@ -30,7 +31,8 @@ class Game {
         this.world = world;
         this.player = player;
         if (!player) {
-            Camera.addOrbitControls(new Vector3(2, 2, 2));
+            const worldSize = WORLD_SIZE * CHUNK_DIMENSIONS.size;
+            Camera.addOrbitControls(new Vector3(-worldSize, CHUNK_DIMENSIONS.depth / 2, -worldSize));
         }
     }
 
@@ -45,6 +47,7 @@ class Game {
         document.body.append(stats.dom);
 
         const animate = () => {
+            stats.update();
             Renderer.renderer.render(GameScene.scene, Camera.camera);
             requestAnimationFrame(animate);
         }

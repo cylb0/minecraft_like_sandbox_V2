@@ -1,8 +1,6 @@
-import { CHUNK_DIMENSIONS, RENDER_CHUNK_RADIUS } from "@/constants/world";
-
 export const CAMERA_FOV = 90;
 export const CAMERA_NEAR = .01;
-export const CAMERA_FAR = (RENDER_CHUNK_RADIUS + 1) * CHUNK_DIMENSIONS.size * 2;
+export const CAMERA_FAR = 1000;
 export const CAMERA_ROTATION_SENSITIVITY = .002;
 
 /**
