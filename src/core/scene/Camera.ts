@@ -54,6 +54,7 @@ class Camera {
         const controls = new OrbitControls(Camera.orbitCamera, Renderer.renderer.domElement);
         Camera.orbitCamera.position.copy(position);
         controls.target.set(0, DEFAULT_CHUNK_DIMENSIONS.depth / 2, 0);
+        controls.update();
     }
 }
 

@@ -44,7 +44,7 @@ describe("Camera singleton", () => {
             Camera.addOrbitControls(position);
 
             expect(setSpy).toHaveBeenCalledWith(position);
-            expect(Camera.playerCamera.position).toEqual(expect.objectContaining({
+            expect(Camera.orbitCamera.position).toEqual(expect.objectContaining({
                 x: position.x,
                 y: position.y,
                 z: position.z,
