@@ -2,6 +2,7 @@ import { CAMERA_FAR, CAMERA_FOV, CAMERA_NEAR, getCameraAspect } from '@/constant
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { PerspectiveCamera, Vector3 } from 'three';
 import Renderer from '@/core/scene/Renderer';
+import { DEFAULT_CHUNK_DIMENSIONS } from '@/constants/world';
 
 /**
  * Singleton class representing the main camera used by the player in game.
@@ -52,6 +53,7 @@ class Camera {
     static addOrbitControls(position: Vector3): void {
         const controls = new OrbitControls(Camera.orbitCamera, Renderer.renderer.domElement);
         Camera.orbitCamera.position.copy(position);
+        controls.target.set(0, DEFAULT_CHUNK_DIMENSIONS.depth / 2, 0);
     }
 }
 
