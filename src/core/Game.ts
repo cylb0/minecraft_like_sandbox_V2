@@ -4,8 +4,6 @@ import GameScene from '@/core/scene/GameScene';
 import Player from '@/units/Player';
 import Renderer from '@/core/scene/Renderer';
 import World from "@/world/World";
-import { Vector3 } from 'three';
-import { CHUNK_DIMENSIONS, WORLD_SIZE } from '@/constants/world';
 
 /**
  * Manages the game logic, rendering and utilities.
@@ -30,10 +28,6 @@ class Game {
     constructor(world: World, player?: Player) {
         this.world = world;
         this.player = player;
-        if (!player) {
-            const worldSize = WORLD_SIZE * CHUNK_DIMENSIONS.size;
-            Camera.addOrbitControls(new Vector3(-worldSize, CHUNK_DIMENSIONS.depth / 2, -worldSize));
-        }
     }
 
     /**
@@ -43,12 +37,15 @@ class Game {
      * - Uses `requestAnimationFrame` to create a smooth animation loop.
      */
     public start(): void {
-        const stats = new Stats();
-        document.body.append(stats.dom);
+        // const stats = new Stats();
+        // document.body.append(stats.dom);
 
         const animate = () => {
-            stats.update();
-            Renderer.renderer.render(GameScene.scene, Camera.camera);
+            const canvas = Renderer.renderer.domElement;
+            // stats.update();
+            const camera = Renderer.useOrbitCamera ? Camera.orbitCamera : Camera.playerCamera;
+
+            Renderer.renderer.render(GameScene.scene, camera);
             requestAnimationFrame(animate);
         }
         animate();

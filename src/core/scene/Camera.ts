@@ -10,8 +10,16 @@ import Renderer from '@/core/scene/Renderer';
  * - Provides a global camera instance that can be accessed from anywhere in the game.
  */
 class Camera {
-    /** The `THREE.PerspectiveCamera` instance used in the scene. */
-    static #camera: PerspectiveCamera = new PerspectiveCamera(
+    /** The `THREE.PerspectiveCamera` instance used by the player. */
+    static #playerCamera: PerspectiveCamera = new PerspectiveCamera(
+        CAMERA_FOV,
+        getCameraAspect(),
+        CAMERA_NEAR,
+        CAMERA_FAR
+    );
+
+    /** The orbit controls camera. */
+    static #orbitCamera: PerspectiveCamera = new PerspectiveCamera(
         CAMERA_FOV,
         getCameraAspect(),
         CAMERA_NEAR,
@@ -19,12 +27,17 @@ class Camera {
     );
 
     /**
-     * Retrieves the `THREE.PerspectiveCamera` instance.
-     *
      * @returns The singleton `THREE.PerspectiveCamera` instance.
      */
-    public static get camera(): PerspectiveCamera {
-        return this.#camera;
+    static get playerCamera(): PerspectiveCamera {
+        return this.#playerCamera;
+    }
+
+    /**
+     * @returns The singleton `THREE.PerspectiveCamera` instance.
+     */
+    static get orbitCamera(): PerspectiveCamera {
+        return this.#playerCamera;
     }
 
     /**
@@ -36,10 +49,9 @@ class Camera {
      * 
      * @param position - The `THREE.Vector3` new position of the camera.
      */
-    public static addOrbitControls(position: Vector3): void {
-        const controls = new OrbitControls(Camera.camera, Renderer.renderer.domElement);
-        Camera.camera.position.copy(position);
-        Camera.camera.lookAt(0, 0, 0);
+    static addOrbitControls(position: Vector3): void {
+        const controls = new OrbitControls(Camera.orbitCamera, Renderer.renderer.domElement);
+        Camera.orbitCamera.position.copy(position);
     }
 }
 

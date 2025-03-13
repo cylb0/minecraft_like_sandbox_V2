@@ -17,8 +17,8 @@ describe("Game class", () => {
     let playerMock: Player;
 
     beforeEach(() => {
-        worldMock = new World(GameScene.scene, 0);
-        playerMock = new Player(GameScene.scene, Camera.camera, worldMock);
+        worldMock = new World(0);
+        playerMock = new Player(GameScene.scene, Camera.playerCamera, worldMock);
         game = new Game(worldMock, playerMock);
     });
 
@@ -26,12 +26,12 @@ describe("Game class", () => {
         expect(game).toBeDefined();
     });
 
-    it("should append stats.dom to document.body", () => {
-        const domSpy = jest.spyOn(document.body, 'append');
-        game.start();
-        expect(domSpy).toHaveBeenCalled();
-        domSpy.mockRestore();
-    });
+    // it("should append stats.dom to document.body", () => {
+    //     const domSpy = jest.spyOn(document.body, 'append');
+    //     game.start();
+    //     expect(domSpy).toHaveBeenCalled();
+    //     domSpy.mockRestore();
+    // });
 
     it("should call requestAnimationFrame", () => {
         const requestSpy = jest.spyOn(window, "requestAnimationFrame");

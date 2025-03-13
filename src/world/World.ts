@@ -1,43 +1,69 @@
-import { BLOCK_SIZE } from "@/constants/block";
-import { CHUNK_DIMENSIONS, WORLD_SIZE } from "@/constants/world";
-import { AmbientLight, BoxGeometry, ColorRepresentation, DirectionalLight, Group, Mesh, MeshLambertMaterial, Scene, Vector3 } from "three";
-
-const geometry = new BoxGeometry(BLOCK_SIZE);
-const material = new MeshLambertMaterial({ color: 0x00ff00 });
+import { AmbientLight, ColorRepresentation, DirectionalLight, Group, Vector3 } from "three";
+import Chunk from "./Chunk";
+import { getDefaultWorldConfig } from "@/config";
+import { WorldConfig } from "@/types/Config";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
+ * @extends {Group} For easier rendering.
  */
 class World extends Group {
-    /** The `THREE.Scene` scene where the world is rendered. */
-    #scene: Scene;
-
     /** Unique seed used for terrain procedural generation. */
-    #seed: number;
+    seed: number;
+
+    /** Object containing all data required for configuration. */
+    config: WorldConfig;
 
     /**
-     * Creates a new world instance.
+     * Creates a new World instance.
      *
-     * @param scene - The `THREE.Scene` where world object will be added.
-     * @param seed - Unique seed used for noise generation.
+     * @param seed - The seed use for generation.
+     * @param config - The `WorldConfig` object containing all data related to generation.
      */
-    constructor(scene: Scene, seed: number) {
+    constructor(seed: number, config: WorldConfig = getDefaultWorldConfig()) {
         super();
-        this.#scene = scene;
-        this.#seed = seed;
+        this.seed = seed;
+        this.config = config;
     }
 
-    generateBasicWorld() {
-        const halfWorldSize = WORLD_SIZE * CHUNK_DIMENSIONS.size / 2;
-        for (let x = -halfWorldSize; x < halfWorldSize; x++) {
-            for (let y = 0; y < CHUNK_DIMENSIONS.depth; y++) {
-                for (let z = -halfWorldSize; z < halfWorldSize; z++) {
-                    const block = new Mesh(geometry, material);
-                    block.position.set(x, y, z);
-                    this.add(block);
-                }
+    /**
+     * Generates the world by creating and adding chunks within a render radius.
+     */
+    generate() {
+        this.dispose();
+        for (let x = -this.config.size.renderRadius; x <= this.config.size.renderRadius; x++) {
+            for (let z = -this.config.size.renderRadius; z <= this.config.size.renderRadius; z++) {
+                this.#generateChunk(x, z, this.seed);
             }
-        } 
+        }
+    }
+
+    /**
+     * Disposes of and removes all chunks within the world.
+     * It iterates through the world's children and dispose of any `Chunk` instance.
+     */
+    dispose() {
+        for (let i = this.children.length - 1; i >= 0; i--) {
+            const child = this.children[i];
+            if (child instanceof Chunk) {
+                child.dispose();
+                this.remove(child);
+            }
+        }
+    }
+
+    /**
+     * Generate a chunk at given world grid coordinates.
+     * 
+     * @param x - The worldGrid-coordinate of the chunk.
+     * @param z - The worldGrid-coordinate of the chunk.
+     * @param seed - The seed used for chunk generation.
+     */
+    #generateChunk(x: number, z: number, seed: number) {
+        const chunk = new Chunk(seed, this.config);
+        chunk.position.set(x * this.config.size.chunkWidth, 0, z * this.config.size.chunkWidth);
+        chunk.generate();
+        this.add(chunk);
     }
 
     /**
@@ -54,7 +80,7 @@ class World extends Group {
      * @param options.shadow - Wether or not shadows should be enabled (default: `false`).
      */
     public addLighting({
-        position = new Vector3(0, CHUNK_DIMENSIONS.depth * 2, 0),
+        position = new Vector3(0, this.config.size.chunkDepth * 2, 0),
         color = 0xffffff,
         intensity = 1,
         shadow = false,

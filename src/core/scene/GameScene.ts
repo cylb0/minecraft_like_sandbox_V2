@@ -16,14 +16,14 @@ class GameScene {
      *
      * @returns The `THREE.WebGLRenderer` instance.
      */
-    public static get scene(): Scene {
+    static get scene(): Scene {
         return this.#scene;
     }
     
     /**
      * Resets the scene by clearing all objects.
      */
-    public static reset(): void {
+    static reset(): void {
         const scene = GameScene.scene;
         while (scene.children.length > 0) {
             scene.remove(scene.children[0]);

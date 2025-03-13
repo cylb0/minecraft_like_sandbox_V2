@@ -1,27 +1,17 @@
+import { PerspectiveCameraMock } from "./three/Camera";
+import { BoxGeometryMock } from "./three/Geometry";
+import { MeshBasicMaterialMock, MeshLambertMaterialMock } from "./three/Material";
+import { GroupMock, MeshMock } from "./three/Object3D";
+import SceneMock from "./three/Scene";
+import WebGLRendererMock from "./three/WebGLRenderer";
+
 const actualThree = jest.requireActual("three");
-
-const BoxGeometryMock = jest.fn();
-
-const GroupMock = jest.fn();
-
-const MeshLambertMaterialMock = jest.fn();
-
-const PerspectiveCameraMock = jest.fn().mockImplementation(() => ({
-    position: new Vector3(),
-    lookAt: jest.fn(),
-}));
-
-const SceneMock = jest.fn();
-
-const WebGLRendererMock = jest.fn().mockImplementation(() => ({
-    setSize: jest.fn(),
-    domElement: document.createElement("div"),
-    render: jest.fn(),
-}));
 
 export const BoxGeometry = BoxGeometryMock;
 export const Group = GroupMock;
 export const PerspectiveCamera = PerspectiveCameraMock;
+export const Mesh = MeshMock;
+export const MeshBasicMaterial = MeshBasicMaterialMock;
 export const MeshLambertMaterial = MeshLambertMaterialMock;
 export const Scene = SceneMock;
 export const Vector3 = actualThree.Vector3;
@@ -29,8 +19,14 @@ export const WebGLRenderer = WebGLRendererMock;
 
 const three = {
     ...actualThree,
+    BoxGeometry: BoxGeometryMock,
+    Group: GroupMock,
+    Mesh: MeshMock,
+    MeshBasicMaterial: MeshBasicMaterialMock,
+    MeshLambertMaterial: MeshLambertMaterialMock,
     PerspectiveCamera: PerspectiveCameraMock,
     Scene: SceneMock,
+    Vector3: actualThree.Vector3,
     WebGLRenderer: WebGLRendererMock,
 }
 

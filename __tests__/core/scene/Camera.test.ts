@@ -1,7 +1,7 @@
 import Camera from "@/core/scene/Camera"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Renderer from "@/core/scene/Renderer";
-import { Vector3 } from "three";
+import { Vector3, WebGLRenderer } from "three";
 
 jest.mock("three");
 jest.mock("three/examples/jsm/controls/OrbitControls.js");
@@ -9,13 +9,13 @@ jest.mock("@/core/scene/Renderer");
 
 describe("Camera singleton", () => {
     test("should return the same instance of Camera", () => {
-        const camera1 = Camera.camera;
-        const camera2 = Camera.camera;
+        const camera1 = Camera.playerCamera;
+        const camera2 = Camera.playerCamera;
         expect(camera1).toBe(camera2);
     });
 
     test("should return a valid `THREE.PerspectiveCamera`", () => {
-        const camera = Camera.camera;
+        const camera = Camera.playerCamera;
         expect(camera).toEqual(expect.objectContaining({
             position: expect.objectContaining({
                 set: expect.any(Function)
@@ -29,24 +29,22 @@ describe("Camera singleton", () => {
         beforeEach(() => {
             orbitControlsMock = OrbitControls as jest.Mock;
             orbitControlsMock.mockClear();
-
-            (Renderer as any).renderer = { domElement: document.createElement("div") };
+            (Renderer as any).renderer = new WebGLRenderer();
         });
 
         test("should create OrbitControls instance", () => {
             Camera.addOrbitControls(new Vector3());
-            expect(orbitControlsMock).toHaveBeenCalledWith(Camera.camera, Renderer.renderer.domElement);
+            expect(orbitControlsMock).toHaveBeenCalledWith(Camera.orbitCamera, Renderer.renderer.domElement);
         });
 
         test("should set the camera position", () => {
             const position = new Vector3(2, 0, 2);
-            const setSpy = jest.spyOn(Camera.camera.position, "copy");
+            const setSpy = jest.spyOn(Camera.orbitCamera.position, "copy");
 
             Camera.addOrbitControls(position);
 
             expect(setSpy).toHaveBeenCalledWith(position);
-            expect(Camera.camera.lookAt).toHaveBeenCalledWith(0, 0, 0);
-            expect(Camera.camera.position).toEqual(expect.objectContaining({
+            expect(Camera.playerCamera.position).toEqual(expect.objectContaining({
                 x: position.x,
                 y: position.y,
                 z: position.z,

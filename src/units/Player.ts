@@ -1,11 +1,14 @@
 import { PLAYER_DIMENSIONS, PLAYER_SPAWN_POSITION } from "@/constants/player";
+import Camera from "@/core/scene/Camera";
 import IMovable from "@/interfaces/IMovable";
 import World from "@/world/World";
 import { BoxGeometry, Group, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, Scene, Vector3 } from "three";
 
-class Player implements IMovable {
-    #camera: PerspectiveCamera
-    #object: Object3D;
+/**
+ * Represents the player.
+ * @extends {Group} For easier rendering.
+ */
+class Player extends Group implements IMovable {
     #scene: Scene;
     #world: World;
 
@@ -13,25 +16,22 @@ class Player implements IMovable {
      * Creates a new `Player` instance.
      * 
      * - Initializes movement, camera and event listeners.
-     * - Calls `render()` to create the player model.
      *
+     * @param scene - The `THREE.Scene` to render the player in.
      * @param camera - The `THREE.Camera` attached to the player.
      * @param world - The `World` instance managing chunks and blocks.
      */
     constructor(scene: Scene, camera: PerspectiveCamera, world: World) {
-        this.#camera = camera;
+        super();
         this.#scene = scene;
         this.#world = world;
+        this.add(camera);
 
-        const playerGroup = new Group();
         const playerModel = this.#createPlayer();
-        playerGroup.add(playerModel);
+        this.add(playerModel);
+        this.position.copy(new Vector3(PLAYER_SPAWN_POSITION.x, PLAYER_SPAWN_POSITION.y, PLAYER_SPAWN_POSITION.z));
 
-        this.#object = playerGroup;
-        this.#object.position.copy(new Vector3(PLAYER_SPAWN_POSITION.x, PLAYER_SPAWN_POSITION.y, PLAYER_SPAWN_POSITION.z));
-        this.#object.add(camera);
-
-        this.#addToScene();
+        scene.add(this);
     }
 
     move(): void {
@@ -40,10 +40,6 @@ class Player implements IMovable {
 
     moveDirection(direction: Vector3, multiplier: number): void {
         throw new Error("Method not implemented.");
-    }
-
-    get object(): Object3D {
-        return this.#object;
     }
 
     /**
@@ -58,15 +54,6 @@ class Player implements IMovable {
         const playerMaterial = new MeshBasicMaterial({ color: 0x0000ff });
         return new Mesh(playerGeometry, playerMaterial);
     }
-
-    /**
-     * Adds the player to the scene.
-     */
-    #addToScene(): void {
-        if (!this.#scene.children.includes(this.object)) {
-            this.#scene.add(this.object);
-        }
-    } 
 }
 
 export default Player;

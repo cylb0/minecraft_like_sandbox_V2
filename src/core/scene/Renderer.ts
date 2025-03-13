@@ -13,8 +13,12 @@ class Renderer {
        /** The `THREE.WebGLRenderer` instance used to render the scene. */
     static #renderer: WebGLRenderer = new WebGLRenderer();
 
+    static useOrbitCamera: boolean;
+
     static {
-        this.#renderer.setSize(window.innerWidth, window.innerHeight);
+        window.addEventListener("load", () => {
+            Renderer.#onResize();
+        });
         document.body.appendChild(this.#renderer.domElement);
         window.addEventListener('resize', Renderer.#onResize.bind(Renderer));
     }
@@ -35,10 +39,18 @@ class Renderer {
      * - Resizes the renderer based on the new window size.
      */
     static #onResize(): void {
-        const camera = Camera.camera;
+        const camera = Renderer.useOrbitCamera ? Camera.orbitCamera : Camera.playerCamera;
         camera.aspect = getCameraAspect();
         camera.updateProjectionMatrix();
         this.#renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    /**
+     * Sets the camera to use for rendering.
+     * @param useOrbitCamera - Set to `true` to use the orbit camera, `false` to use the player camera.
+     */
+    static setCamera(useOrbitCamera: boolean): void {
+        Renderer.useOrbitCamera = useOrbitCamera;
     }
 }
 

@@ -1,5 +1,3 @@
-import { CHUNK_DIMENSIONS } from "@/constants/world";
-
 /**
  * Represents the dimensions of the player model (hitbox).
  * 
