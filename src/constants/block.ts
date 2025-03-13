@@ -1,4 +1,4 @@
-import { Block, BlockData, BlockType, DistributionType, OreData } from "@/types/Blocks";
+import { Block, BlockType, BlockTypeData, DistributionType, OreData } from "@/types/Blocks";
 import { BoxGeometry } from "three";
 
 
@@ -16,7 +16,7 @@ export const DEFAULT_BLOCK_GEOMETRY = new BoxGeometry(DEFAULT_BLOCK_SIZE);
  * It maps `BlockType` enums to either `OreData`, `BlockData` or `undefined`.
  */
 type BlocksType = {
-    [key in BlockType]?: OreData | BlockData | undefined;
+    [key in BlockType]?: BlockTypeData | undefined;
 }
 
 /**
@@ -33,6 +33,9 @@ export const BLOCKS: BlocksType = {
     [BlockType.Water]: {
         color: 0x1e90ff,
         opacity: .5,
+    },
+    [BlockType.Sand]: {
+        color: 0xc2b280,
     },
     [BlockType.Stone]: {
         color: 0xf0f0f0,

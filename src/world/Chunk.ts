@@ -1,7 +1,7 @@
-import { EMPTY_BLOCK, ORES } from "@/constants/block";
+import { BLOCKS, EMPTY_BLOCK, ORES } from "@/constants/block";
 import BlockRenderer from "@/helpers/BlockRenderer";
 import PseudoRandomGenerator from "@/helpers/PseudoRandomGenerator";
-import { Block, BlockType, DistributionType, OreData } from "@/types/Blocks";
+import { Block, BlockData, BlockType, BlockTypeData, DistributionType, OreData } from "@/types/Blocks";
 import { WorldConfig } from "@/types/Config";
 import { Group, InstancedMesh, Matrix4 } from "three";
 
@@ -54,6 +54,7 @@ class Chunk extends Group {
         this.#generateOres();
         this.#generateStoneTerrain();
         this.#generateSurface();
+        this.#generateWater();
         this.#generateMeshes();
     }
 
@@ -157,29 +158,67 @@ class Chunk extends Group {
     }
 
     /**
-     * Generates the surface layer of the chunk by adding dirt with grass or snow based on actual terrain height.
+     * Generates the surface layer of the chunk by replacing 2 top-layers depending on terrain.
      *
-     * - Iterates through the chunk, finds the highest non-empty block and adds surface blocks over it.
+     * - Iterates through the chunk, finds the highest non-empty block and replaces surface blocks.
      */
     #generateSurface(): void {
         for (let x = 0; x < this.#config.size.chunkWidth; x++) {
             for (let z = 0; z < this.#config.size.chunkWidth; z++) {
-                let highestBlockY = 0;
-                for (let y = this.#config.size.chunkDepth - 1; y >= 0; y--) {
-                    if (this.getBlock(x, y, z)?.blockType !== BlockType.Empty) {
-                        highestBlockY = y;
-                        break;
-                    }
-                }
-                this.setBlockType(x, highestBlockY + 1, z, BlockType.Dirt);
+                let highestBlockY = this.#findHighestEmptyBlock(x, z);
 
-                if (highestBlockY < this.#config.terrain.snowLevel) {
-                    this.setBlockType(x, highestBlockY + 2, z, BlockType.Grass);
-                } else {
-                    this.setBlockType(x, highestBlockY + 2, z, BlockType.Snow);
+                // Can only replace 2 blocks over bedrock.
+                if (highestBlockY > 2) {
+                    if (highestBlockY <= this.#config.water.seaLevel) {
+                        this.setBlockType(x, highestBlockY, z, BlockType.Sand);
+                        this.setBlockType(x, highestBlockY - 1, z, BlockType.Sand);
+                    } else if (highestBlockY === this.#config.water.seaLevel + 1) {
+                        this.setBlockType(x, highestBlockY, z, BlockType.Sand);
+                        this.setBlockType(x, highestBlockY - 1, z, BlockType.Grass);
+                    } else {
+                        this.setBlockType(x, highestBlockY - 1, z, BlockType.Dirt);
+                        if (highestBlockY < this.#config.terrain.snowLevel) {
+                            this.setBlockType(x, highestBlockY, z, BlockType.Grass);
+                        } else {
+                            this.setBlockType(x, highestBlockY, z, BlockType.Snow);
+                        }
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Generates water blocks between highest block height and seaLevel threshold.
+     */
+    #generateWater(): void {
+        for (let x = 0; x < this.#config.size.chunkWidth; x++) {
+            for (let z = 0; z < this.#config.size.chunkWidth; z++) {
+                let highestBlockY = this.#findHighestEmptyBlock(x, z);
+
+                for (let y = highestBlockY; y <= this.#config.water.seaLevel; y++) {
+                    this.setBlockType(x, y, z, BlockType.Water);
+                }
+            }
+        }
+    }
+
+    /**
+     * Retrieves the highest empty block coordinate of a core (chunk section at given `(x, z)`).
+     * 
+     * @param x x-coordinate of the core.
+     * @param z z-coordinate of the core.
+     * @returns the y-coordinate of the highest empty block found.
+     */
+    #findHighestEmptyBlock(x: number, z: number): number {
+        let highestBlockY = 0;
+        for (let y = this.#config.size.chunkDepth - 1; y >= 0; y--) {
+            if (this.getBlock(x, y, z)?.blockType !== BlockType.Empty) {
+                highestBlockY = y;
+                break;
+            }
+        }
+        return highestBlockY;
     }
 
     /**
@@ -291,11 +330,21 @@ class Chunk extends Group {
         return this.#testOcclusionCulling(x, y, z);
     }
 
+    isBlockTransparent(blockType: BlockType): boolean {
+        const blockData = this.getBlockData(blockType);
+        return (!blockData) || (blockData.opacity !== undefined && blockData.opacity < 1);
+    }
+
+    getBlockData(blockType: BlockType): BlockTypeData | undefined {
+        return BLOCKS[blockType];
+    }
+
     /**
      * Test wether a block is exposed or not (occlusion culling).
      * 
      * - Retrieves all its neighbor to determine if a face is exposed.
      * - No neighbor on a side means face is visible.
+     * - Any transparent neighbor on a side means it is visible as well.
      * 
      * @param x - x-coordinate within the chunk.
      * @param y - y-coordinate within the chunk.
@@ -304,7 +353,12 @@ class Chunk extends Group {
      */
     #testOcclusionCulling(x: number, y: number, z: number): boolean {
         const neighbors = this.getNeighbors(x, y, z);
-        return neighbors.some(block => block?.blockType === BlockType.Empty);
+
+        return neighbors.some(block => {
+            if (!block) return true;
+            if (block.blockType === BlockType.Empty) return true;
+            return this.isBlockTransparent(block.blockType);
+        })
     }
 
     /**

@@ -4,13 +4,14 @@ export enum BlockType {
     Empty = 0,
     Bedrock = 1,
     Water = 2,
-    Stone = 3,
-    Dirt = 4,
-    Grass = 5,
-    Snow = 6,
-    CoalOre = 7,
-    IronOre = 8,
-    GoldOre = 9,
+    Sand = 3,
+    Stone = 4,
+    Dirt = 5,
+    Grass = 6,
+    Snow = 7,
+    CoalOre = 8,
+    IronOre = 9,
+    GoldOre = 10,
 }
 
 /**
@@ -48,3 +49,5 @@ export interface OreData extends BlockData {
     scale: { x: number, y: number, z: number };
     batches: Array<OreBatch>;
 }
+
+export type BlockTypeData = BlockData | OreData;

@@ -1,5 +1,6 @@
 export interface WorldConfig {
     terrain: TerrainConfig;
+    water: WaterConfig;
     size: WorldSizeConfig;
 };
 
@@ -8,7 +9,6 @@ export interface TerrainConfig {
     bedrockThickness: number;
     scale: number;
     seed: number;
-    seaLevel: number;
     snowLevel: number;
 }
 
@@ -18,4 +18,8 @@ export interface WorldSizeConfig {
     chunkDepth: number;
     renderRadius: number;
     blockSize: number;
+}
+
+export interface WaterConfig {
+    seaLevel: number;
 }
