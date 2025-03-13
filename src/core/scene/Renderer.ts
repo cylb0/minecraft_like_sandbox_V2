@@ -1,4 +1,4 @@
-import { WebGLRenderer } from 'three';
+import { WebGLRenderer, ShadowMapType } from 'three';
 import Camera from '@/core/scene/Camera';
 import { getCameraAspect } from '@/constants/camera';
 
@@ -16,6 +16,11 @@ class Renderer {
     static useOrbitCamera: boolean;
 
     static {
+        const renderer = Renderer.#renderer;
+
+        renderer.setClearColor(0xadd8e6);
+        renderer.shadowMap.enabled = true;
+
         window.addEventListener("load", () => {
             Renderer.#onResize();
         });
