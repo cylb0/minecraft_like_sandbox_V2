@@ -1,4 +1,4 @@
-import { AmbientLight, ColorRepresentation, DirectionalLight, Group, Vector3 } from "three";
+import { AmbientLight, CameraHelper, DirectionalLight, Group,Vector3 } from "three";
 import Chunk from "./Chunk";
 import { getDefaultWorldConfig } from "@/config";
 import { WorldConfig } from "@/types/Config";
@@ -70,32 +70,46 @@ class World extends Group {
      * Setups lighting on the scene.
      * 
      * - Creates indirect lighting, making everything uniformly lit.
-     * - Creates sunlight coming from a specific direction far over origin.
-     * - Enables shadows to add realism.
-     * 
-     * @param options - Configuration object for the lighting.
-     * @param options.position - The sunlight's position in `THREE.Scene` (default: `(0, CHUNK_DIMENSIONS.depth * 2, 0)`).
-     * @param options.color - The light's color (default: `0xffffff`).
-     * @param options.intensity - Tthe light's intensity (default: `1`).
-     * @param options.shadow - Wether or not shadows should be enabled (default: `false`).
+     * - Creates sunlight coming from a specific direction.
      */
-    public addLighting({
-        position = new Vector3(0, this.config.size.chunkDepth * 2, 0),
-        color = 0xffffff,
-        intensity = 1,
-        shadow = false,
-    }: {
-        position?: Vector3;
-        color?: ColorRepresentation;
-        intensity?: number;
-        shadow?: boolean;
-    } = {}) {
-        const ambientLight  = new AmbientLight(color, intensity)
-        this.add(ambientLight);
+    addLighting() {
+        this.#setupAmbientLight();
+        this.#setupSunLight(undefined, false);
+    }
 
-        const sunLight = new DirectionalLight(color, intensity);
+    /**
+     * Sets up the ambient light in the scene.
+     * 
+     * - Provides uniform lighting on the entire scene.
+     */
+    #setupAmbientLight() {
+        const ambientLight = new AmbientLight(this.config.light.ambientLight.color, this.config.light.ambientLight.intensity);
+        this.add(ambientLight);
+    }
+
+    /**
+     * Sets up the directional sun light in the scene.
+     *
+     * - Simulates sunlight casting shadows and providing stronger than ambient directional lightening.
+     * 
+     * @param position - The position of the light source.
+     * @param helper - Boolean flag to trigger shadow camera's frustum.
+     */
+    #setupSunLight(position: Vector3 = this.config.light.sunLight.position, helper: boolean) {
+        const sunLight = new DirectionalLight(this.config.light.sunLight.color, this.config.light.sunLight.intensity);
         sunLight.position.copy(position);
-        sunLight.castShadow = shadow;
+        sunLight.shadow.camera.left = this.config.light.sunLight.shadow.frustum.left;
+        sunLight.shadow.camera.right = this.config.light.sunLight.shadow.frustum.right;
+        sunLight.shadow.camera.top = this.config.light.sunLight.shadow.frustum.top;
+        sunLight.shadow.camera.bottom = this.config.light.sunLight.shadow.frustum.bottom;
+
+        sunLight.shadow.mapSize.height = this.config.light.sunLight.shadow.mapSize;
+        sunLight.shadow.mapSize.width = this.config.light.sunLight.shadow.mapSize;
+        
+        const shadowHelper = new CameraHelper(sunLight.shadow.camera);
+        this.add(shadowHelper);
+
+        sunLight.castShadow = true;
         this.add(sunLight);
     }
 }

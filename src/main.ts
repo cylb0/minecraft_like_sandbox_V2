@@ -8,9 +8,6 @@ import Renderer from "@/core/scene/Renderer";
 import UI from "./helpers/Ui";
 import { Vector3 } from "three";
 
-const renderer = Renderer.renderer;
-renderer.setClearColor(0xadd8e6);
-
 const scene = Scene.scene;
 const seed = 0;
 const world = new World(seed);

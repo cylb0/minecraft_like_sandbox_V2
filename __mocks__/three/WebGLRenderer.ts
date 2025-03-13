@@ -1,7 +1,11 @@
 const WebGLRendererMock = jest.fn().mockImplementation(() => ({
-    setSize: jest.fn(),
     domElement: document.createElement("div"),
+    shadowMap: {
+        enabled: false,
+    },
     render: jest.fn(),
+    setClearColor: jest.fn(),
+    setSize: jest.fn(),
 }));
 
 export default WebGLRendererMock;
