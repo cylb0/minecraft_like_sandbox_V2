@@ -15,7 +15,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",
-    "types": ["jest"],
+    "types": ["jest", "node"],
   },
   "include": ["__mocks__", "src", "__tests__"]
 }

@@ -20,7 +20,6 @@ describe("World class", () => {
     });
 
     it("should initialize World as a Group", () => {
-        console.log(world)
         expect(world).toHaveProperty("children");
         expect(Array.isArray(world.children)).toBe(true);
     })
