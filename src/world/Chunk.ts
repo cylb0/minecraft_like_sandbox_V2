@@ -1,7 +1,7 @@
 import { BLOCKS, EMPTY_BLOCK, ORES } from "@/constants/block";
 import BlockRenderer from "@/helpers/BlockRenderer";
 import PseudoRandomGenerator from "@/helpers/PseudoRandomGenerator";
-import { Block, BlockData, BlockType, BlockTypeData, DistributionType, OreData } from "@/types/Blocks";
+import { Block, BlockData, BlockType, DistributionType } from "@/types/Blocks";
 import { WorldConfig } from "@/types/Config";
 import { Group, InstancedMesh, Matrix4 } from "three";
 
@@ -335,7 +335,7 @@ class Chunk extends Group {
         return (!blockData) || (blockData.opacity !== undefined && blockData.opacity < 1);
     }
 
-    getBlockData(blockType: BlockType): BlockTypeData | undefined {
+    getBlockData(blockType: BlockType): BlockData | undefined {
         return BLOCKS[blockType];
     }
 
@@ -393,7 +393,14 @@ class Chunk extends Group {
         this.traverse((obj) => {
             if (obj instanceof InstancedMesh) {
                 obj.geometry.dispose();
-                obj.material.dispose();
+
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach((material) => {
+                        material.dispose();
+                    })
+                } else {
+                    obj.material.dispose();
+                }
             };
         });
         this.clear();

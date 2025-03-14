@@ -1,6 +1,6 @@
-import { Block, BlockType, BlockTypeData, DistributionType, OreData } from "@/types/Blocks";
-import { BoxGeometry } from "three";
-
+import { TEXTURES } from "@/blocks/textures";
+import { Block, BlockData, BlockType, DistributionType, OreData } from "@/types/Blocks";
+import { BoxGeometry, MeshLambertMaterial } from "three";
 
 /** Represents the size of a block in world units. */
 export const DEFAULT_BLOCK_SIZE = 1;
@@ -16,7 +16,7 @@ export const DEFAULT_BLOCK_GEOMETRY = new BoxGeometry(DEFAULT_BLOCK_SIZE);
  * It maps `BlockType` enums to either `OreData`, `BlockData` or `undefined`.
  */
 type BlocksType = {
-    [key in BlockType]?: BlockTypeData | undefined;
+    [key in BlockType]?: BlockData | OreData | undefined;
 }
 
 /**
@@ -28,29 +28,36 @@ type BlocksType = {
 export const BLOCKS: BlocksType = {
     [BlockType.Empty]: undefined,
     [BlockType.Bedrock]: {
-        color: 0x000000,
+        material: new MeshLambertMaterial({ map: TEXTURES.bedrock }),
     },
     [BlockType.Water]: {
         color: 0x1e90ff,
         opacity: .5,
     },
     [BlockType.Sand]: {
-        color: 0xc2b280,
+        material: new MeshLambertMaterial({ map: TEXTURES.sand }),
     },
     [BlockType.Stone]: {
-        color: 0xf0f0f0,
+        material: new MeshLambertMaterial({ map: TEXTURES.stone }),
     },
     [BlockType.Dirt]: {
-        color: 0x8b4513,
+        material: new MeshLambertMaterial({ map: TEXTURES.dirt }),
     },
     [BlockType.Grass]: {
-        color: 0x228b22,
+        material: [
+            new MeshLambertMaterial({ map: TEXTURES.grass_side }),
+            new MeshLambertMaterial({ map: TEXTURES.grass_side }),
+            new MeshLambertMaterial({ map: TEXTURES.grass_top }),
+            new MeshLambertMaterial({ map: TEXTURES.dirt }),
+            new MeshLambertMaterial({ map: TEXTURES.grass_side }),
+            new MeshLambertMaterial({ map: TEXTURES.grass_side }),
+        ]
     },
     [BlockType.Snow]: {
-        color: 0xffffff,
+        material: new MeshLambertMaterial({ map: TEXTURES.snow }),
     },
     [BlockType.CoalOre]: {
-        color: 0x4a4a4a,
+        material: new MeshLambertMaterial({ map: TEXTURES.coal_ore }),
         rarity: .8,
         scale: { x: 10, y: 5, z: 10 },
         batches: [
@@ -67,7 +74,7 @@ export const BLOCKS: BlocksType = {
         ]
     },
     [BlockType.IronOre]: {
-        color: 0xd4d7d9,
+        material: new MeshLambertMaterial({ map: TEXTURES.iron_ore }),
         rarity: .9,
         scale: { x: 12, y: 25, z: 20 },
         batches: [
@@ -89,7 +96,7 @@ export const BLOCKS: BlocksType = {
         ]
     },
     [BlockType.GoldOre]: {
-        color: 0xefbf04,
+        material: new MeshLambertMaterial({ map: TEXTURES.gold_ore }),
         rarity: .9,
         scale: { x: 15, y: 12, z: 40 },
         batches: [
