@@ -1,5 +1,6 @@
 import { PerspectiveCameraMock } from "./three/Camera";
 import { BoxGeometryMock } from "./three/Geometry";
+import { TextureLoaderMock, TextureMock } from "./three/Loaders";
 import { MeshBasicMaterialMock, MeshLambertMaterialMock } from "./three/Material";
 import { GroupMock, MeshMock } from "./three/Object3D";
 import SceneMock from "./three/Scene";
@@ -14,6 +15,8 @@ export const Mesh = MeshMock;
 export const MeshBasicMaterial = MeshBasicMaterialMock;
 export const MeshLambertMaterial = MeshLambertMaterialMock;
 export const Scene = SceneMock;
+export const Texture = TextureMock;
+export const TextureLoader = TextureLoaderMock;
 export const Vector3 = actualThree.Vector3;
 export const WebGLRenderer = WebGLRendererMock;
 
@@ -26,6 +29,8 @@ const three = {
     MeshLambertMaterial: MeshLambertMaterialMock,
     PerspectiveCamera: PerspectiveCameraMock,
     Scene: SceneMock,
+    Texture: TextureMock,
+    TextureLoader: TextureLoaderMock,
     Vector3: actualThree.Vector3,
     WebGLRenderer: WebGLRendererMock,
 }
