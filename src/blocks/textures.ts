@@ -55,16 +55,3 @@ export async function preloadTextures() {
 
     await Promise.all(promises);
 }
-
-// export const TEXTURES: { [key: string]: Texture } = {
-//     bedrock: loadTexture("textures/bedrock.png"),
-//     coal_ore: loadTexture("textures/coal_ore.png"),
-//     dirt: loadTexture("textures/dirt.png"),
-//     gold_ore: loadTexture("textures/gold_ore.png"),
-//     grass_top: loadTexture("textures/grass_top.png"),
-//     grass_side: loadTexture("textures/grass_side.png"),
-//     iron_ore: loadTexture("textures/iron_ore.png"),
-//     sand: loadTexture("textures/sand.png"),
-//     snow: loadTexture("textures/snow.png"),
-//     stone: loadTexture("textures/stone.png"),
-// }

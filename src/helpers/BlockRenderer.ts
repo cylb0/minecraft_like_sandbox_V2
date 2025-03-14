@@ -1,4 +1,4 @@
-import { BLOCKS, DEFAULT_BLOCK_GEOMETRY } from "@/constants/block";
+import { DEFAULT_BLOCK_GEOMETRY, getBlocks } from "@/constants/block";
 import { BlockData, BlockType } from "@/types/Blocks";
 import { InstancedMesh, Material, MeshStandardMaterial, MeshStandardMaterialParameters } from "three";
 
@@ -32,6 +32,7 @@ class BlockRenderer {
      * - Generates mesh, counters and shadows.
      */
     private initMeshes(): void {
+        const BLOCKS = getBlocks();
         Object.entries(BLOCKS).forEach(([key, blockData]) => {
             const type = Number(key) as BlockType;
 

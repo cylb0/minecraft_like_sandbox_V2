@@ -1,4 +1,4 @@
-import { ORES } from '@/constants/block';
+import { getOres } from '@/constants/block';
 import { BlockType } from '@/types/Blocks';
 import World from '@/world/World';
 import GUI from 'lil-gui';
@@ -20,9 +20,12 @@ class UI {
         terrainFolder.add(world.config.terrain, 'scale', 0, 200, 10).name('Scale');
 
         const oresFolder = gui.addFolder("Ores");
-        for (const ore in ORES) {
+
+        const ores = getOres();
+
+        for (const ore in ores) {
             const blockType = Number(ore) as BlockType;
-            const oreData = ORES[blockType];
+            const oreData = ores[blockType];
             const oreFolder = oresFolder.addFolder(ore);
             oreFolder.add(oreData, 'rarity', 0, 1, 0.01).name("Rarity");
 

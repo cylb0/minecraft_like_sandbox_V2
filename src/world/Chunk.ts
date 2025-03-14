@@ -1,4 +1,4 @@
-import { BLOCKS, EMPTY_BLOCK, ORES } from "@/constants/block";
+import { EMPTY_BLOCK, getBlocks, getOres} from "@/constants/block";
 import BlockRenderer from "@/helpers/BlockRenderer";
 import PseudoRandomGenerator from "@/helpers/PseudoRandomGenerator";
 import { Block, BlockData, BlockType, DistributionType } from "@/types/Blocks";
@@ -78,7 +78,8 @@ class Chunk extends Group {
      */
     #generateOres() {
         const simplex = new SimplexNoise(this.#rng);
-        for (const ore in ORES) {
+        const ores = getOres();
+        for (const ore in ores) {
             const oreType = Number(ore) as BlockType;
             this.#generateOre(oreType, simplex);
         }
@@ -91,7 +92,8 @@ class Chunk extends Group {
      * @param simplex - The `THREE.SimplexNoise` instance used for pseudo-random generation.
      */
     #generateOre(oreType: BlockType, simplex: SimplexNoise): void {
-        const oreData = ORES[oreType];
+        const ores = getOres();
+        const oreData = ores[oreType];
         for (const batch of oreData.batches) {
             const distributionType = batch.distribution;
             for (let x = 0; x < this.#config.size.chunkWidth; x++) {
@@ -336,7 +338,8 @@ class Chunk extends Group {
     }
 
     getBlockData(blockType: BlockType): BlockData | undefined {
-        return BLOCKS[blockType];
+        const blocks = getBlocks();
+        return blocks[blockType];
     }
 
     /**
