@@ -13,10 +13,10 @@ import World from "@/world/World";
  */
 class Game {
     /** The world instance containing chunks and terrain. */
-    private world: World;
+    #world: World;
 
     /** The player instance controlled by the user. */
-    private player?: Player;
+    #player?: Player;
 
     /**
      * Creates a new game instance.
@@ -26,8 +26,8 @@ class Game {
      * @param player - The `Player` instance controlled by the user.
      */
     constructor(world: World, player?: Player) {
-        this.world = world;
-        this.player = player;
+        this.#world = world;
+        this.#player = player;
     }
 
     /**
@@ -36,7 +36,7 @@ class Game {
      * - Renders the scene using `Renderer singleton`.
      * - Uses `requestAnimationFrame` to create a smooth animation loop.
      */
-    public start(): void {
+    start(): void {
         // const stats = new Stats();
         // document.body.append(stats.dom);
 

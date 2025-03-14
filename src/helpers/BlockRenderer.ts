@@ -1,4 +1,4 @@
-import { BLOCKS, DEFAULT_BLOCK_GEOMETRY } from "@/constants/block";
+import { DEFAULT_BLOCK_GEOMETRY, getBlocks } from "@/constants/block";
 import { BlockData, BlockType } from "@/types/Blocks";
 import { InstancedMesh, Material, MeshStandardMaterial, MeshStandardMaterialParameters } from "three";
 
@@ -27,14 +27,17 @@ class BlockRenderer {
     /**
      * Initializes instanced mesh for each block type defined in config `BLOCKS`.
      * 
-     * - Creates materials, meshes and counters.
+     * - Loops through each entry in `BLOCKS`. And renders each non-empty block.
+     * - Checks if the block has a predefined material, otherwise rely on its color property to generate one.
+     * - Generates mesh, counters and shadows.
      */
     private initMeshes(): void {
+        const BLOCKS = getBlocks();
         Object.entries(BLOCKS).forEach(([key, blockData]) => {
             const type = Number(key) as BlockType;
 
             if (type !== BlockType.Empty) {
-                const material = this.createMaterial(blockData!);
+                const material = blockData.material ?? this.createColorMaterial(blockData!);
                 const mesh = new InstancedMesh(DEFAULT_BLOCK_GEOMETRY, material, this.#maxInstances);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
@@ -49,7 +52,7 @@ class BlockRenderer {
      * @param blockData - The block data containing material properties.
      * @returns The created mesh material.
      */
-    private createMaterial(blockData: BlockData): Material {
+    private createColorMaterial(blockData: BlockData): Material {
         const materialOptions: MeshStandardMaterialParameters = {
             color: blockData.color,
             transparent: !!blockData.opacity,
