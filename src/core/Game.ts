@@ -45,6 +45,8 @@ class Game {
             // stats.update();
             const camera = Renderer.useOrbitCamera ? Camera.orbitCamera : Camera.playerCamera;
 
+            this.#world.sunLight?.update();
+
             Renderer.renderer.render(GameScene.scene, camera);
             requestAnimationFrame(animate);
         }

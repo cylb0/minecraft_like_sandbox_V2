@@ -2,6 +2,7 @@ import { AmbientLight, CameraHelper, DirectionalLight, Group,Vector3 } from "thr
 import Chunk from "./Chunk";
 import { getDefaultWorldConfig } from "@/config";
 import { WorldConfig } from "@/types/Config";
+import DayNightLight from "./Lights/DayNightLight";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
@@ -13,6 +14,8 @@ class World extends Group {
 
     /** Object containing all data required for configuration. */
     config: WorldConfig;
+
+    sunLight: DayNightLight | null = null;
 
     /**
      * Creates a new World instance.
@@ -73,8 +76,8 @@ class World extends Group {
      * - Creates sunlight coming from a specific direction.
      */
     addLighting() {
-        this.#setupAmbientLight();
-        this.#setupSunLight(undefined, false);
+        // this.#setupAmbientLight();
+        this.#setupSunLight(true);
     }
 
     /**
@@ -90,27 +93,17 @@ class World extends Group {
     /**
      * Sets up the directional sun light in the scene.
      *
-     * - Simulates sunlight casting shadows and providing stronger than ambient directional lightening.
+     * - Simulates sunlight casting shadows and providing stronger than ambient directional lighting.
      * 
-     * @param position - The position of the light source.
      * @param helper - Boolean flag to trigger shadow camera's frustum.
      */
-    #setupSunLight(position: Vector3 = this.config.light.sunLight.position, helper: boolean) {
-        const sunLight = new DirectionalLight(this.config.light.sunLight.color, this.config.light.sunLight.intensity);
-        sunLight.position.copy(position);
-        sunLight.shadow.camera.left = this.config.light.sunLight.shadow.frustum.left;
-        sunLight.shadow.camera.right = this.config.light.sunLight.shadow.frustum.right;
-        sunLight.shadow.camera.top = this.config.light.sunLight.shadow.frustum.top;
-        sunLight.shadow.camera.bottom = this.config.light.sunLight.shadow.frustum.bottom;
-
-        sunLight.shadow.mapSize.height = this.config.light.sunLight.shadow.mapSize;
-        sunLight.shadow.mapSize.width = this.config.light.sunLight.shadow.mapSize;
-        
-        const shadowHelper = new CameraHelper(sunLight.shadow.camera);
-        this.add(shadowHelper);
-
-        sunLight.castShadow = true;
-        this.add(sunLight);
+    #setupSunLight(helper: boolean) {
+        this.sunLight = new DayNightLight(
+            this,
+            this.config.light.sunLight,
+            new Vector3(0, 0, 0),
+            helper
+        );
     }
 }
 

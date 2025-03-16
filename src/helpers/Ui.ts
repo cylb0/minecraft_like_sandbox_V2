@@ -7,7 +7,7 @@ class UI {
     static startWorldUi(world: World) {
         const gui = new GUI();
 
-        gui.add
+        gui.add(world, "seed", -999, 999, 1).name("seed");
 
         const dimensionsFolder = gui.addFolder("Dimensions");
         dimensionsFolder.add(world.config.size, 'worldSize', 1, 16, 1).name('Size');
