@@ -1,5 +1,3 @@
-import { Vector3 } from "three";
-
 /** TERRAIN START */
 export const DEFAULT_SEED = 0;
 /**
@@ -23,7 +21,7 @@ export const DEFAULT_RENDER_RADIUS = 2;
 
 // LIGHTING
 /** Day duration in seconds. (max: 86400 = 24h)*/
-export const DEFAULT_DAY_DURATION = 60;
+export const DEFAULT_DAY_DURATION = 15;
 
 export const DEFAULT_AMBIENTLIGHT_COLOR = 0xffffff;
 export const DEFAULT_AMBIENTLIGHT_INTENSITY = .1;
