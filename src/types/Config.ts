@@ -1,4 +1,4 @@
-import { ColorRepresentation, Vector3 } from "three";
+import { ColorRepresentation } from "three";
 
 export interface WorldConfig {
     terrain: TerrainConfig;
@@ -32,18 +32,17 @@ export interface LightingConfig {
         color: ColorRepresentation;
         intensity: number;
     },
-    sunLight: {
-        color: ColorRepresentation;
-        intensity: number;
-        shadow: {
-            frustum: {
-                left: number;
-                right: number;
-                bottom: number;
-                top: number;
-            },
-            mapSize: number;
-        },
-        position: Vector3;
-    }
+    sunLight: DayNightLightConfig;
+};
+
+export interface DayNightLightConfig {
+    color: ColorRepresentation;
+    /** Duration of the day in seconds. */
+    dayDuration: number;
+    intensity: number;
+    radius: number;
+    shadow: {
+        frustum: number,
+        mapSize: number;
+    },
 };
