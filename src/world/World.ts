@@ -1,8 +1,8 @@
-import { AmbientLight, CameraHelper, DirectionalLight, Group,Vector3 } from "three";
+import { AmbientLight, Group,Vector3 } from "three";
 import Chunk from "./Chunk";
 import { getDefaultWorldConfig } from "@/config";
 import { WorldConfig } from "@/types/Config";
-import DayNightLight from "./Lights/DayNightLight";
+import DayNightLight from "./lights/DayNightLight";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
@@ -76,7 +76,7 @@ class World extends Group {
      * - Creates sunlight coming from a specific direction.
      */
     addLighting() {
-        // this.#setupAmbientLight();
+        this.#setupAmbientLight();
         this.#setupSunLight(true);
     }
 

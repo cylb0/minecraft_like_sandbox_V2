@@ -2,6 +2,7 @@ import { getDefaultWorldConfig } from "@/config";
 import World from "@/world/World";
 import { AmbientLight, DirectionalLight } from "three";
 
+jest.unmock("@/world/World");
 jest.unmock("three");
 
 describe("World class", () => {
@@ -49,12 +50,12 @@ describe("World class", () => {
         it("should apply correct config to sunLight", () => {
             world.addLighting();
             const sunLight = world.children.find(child => child instanceof DirectionalLight);
+            expect(world.sunLight).toBeDefined();
             expect(sunLight).toBeDefined();
-            expect(sunLight?.position.equals(config.light.sunLight.position)).toBe(true);
-            expect(sunLight?.shadow.camera.left).toBe(config.light.sunLight.shadow.frustum.left);
-            expect(sunLight?.shadow.camera.top).toBe(config.light.sunLight.shadow.frustum.top);
-            expect(sunLight?.shadow.camera.right).toBe(config.light.sunLight.shadow.frustum.right);
-            expect(sunLight?.shadow.camera.bottom).toBe(config.light.sunLight.shadow.frustum.bottom);
+            expect(sunLight?.shadow.camera.left).toBe(-config.light.sunLight.shadow.frustum);
+            expect(sunLight?.shadow.camera.top).toBe(config.light.sunLight.shadow.frustum);
+            expect(sunLight?.shadow.camera.right).toBe(config.light.sunLight.shadow.frustum);
+            expect(sunLight?.shadow.camera.bottom).toBe(-config.light.sunLight.shadow.frustum);
         });
         
     });

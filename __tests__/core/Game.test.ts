@@ -1,6 +1,13 @@
-jest.mock("three");
+jest.mock("three", () => ({
+    ...jest.requireActual("three"),
+    WebGLRenderer: require("../../__mocks__/three/WebGLRenderer").default,
+}));
+
 jest.mock("three/examples/jsm/libs/stats.module");
 jest.mock("three/examples/jsm/controls/OrbitControls");
+
+jest.mock("@/units/Player");
+jest.mock("@/world/World");
 
 import Camera from "@/core/scene/Camera";
 import Game from "@/core/Game";
@@ -8,8 +15,6 @@ import GameScene from "@/core/scene/GameScene";
 import Player from "@/units/Player";
 import World from "@/world/World";
 
-jest.mock("@/units/Player");
-jest.mock("@/world/World");
 
 describe("Game class", () => {
     let game: Game;
@@ -18,6 +23,7 @@ describe("Game class", () => {
 
     beforeEach(() => {
         worldMock = new World(0);
+        console.log(worldMock);
         playerMock = new Player(GameScene.scene, Camera.playerCamera, worldMock);
         game = new Game(worldMock, playerMock);
     });
