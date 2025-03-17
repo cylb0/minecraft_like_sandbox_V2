@@ -1,6 +1,8 @@
 import { ColorRepresentation } from "three";
 
 export interface WorldConfig {
+    /** Duration of the day in seconds. */
+    dayDurationInSeconds: number;
     terrain: TerrainConfig;
     water: WaterConfig;
     size: WorldSizeConfig;
@@ -37,12 +39,16 @@ export interface LightingConfig {
 
 export interface DayNightLightConfig {
     color: ColorRepresentation;
-    /** Duration of the day in seconds. */
-    dayDuration: number;
     intensity: number;
     radius: number;
     shadow: {
         frustum: number,
         mapSize: number;
     },
+    variations: Map<number, LightVariation>;
+};
+
+export interface LightVariation {
+    color: ColorRepresentation,
+    intensity: number;
 };
