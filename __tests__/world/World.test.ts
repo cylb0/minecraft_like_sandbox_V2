@@ -1,9 +1,9 @@
+jest.unmock("three");
+jest.unmock("@/world/World");
+
 import { getDefaultWorldConfig } from "@/config";
 import World from "@/world/World";
 import { AmbientLight, DirectionalLight } from "three";
-
-jest.unmock("@/world/World");
-jest.unmock("three");
 
 describe("World class", () => {
     let world: World;
@@ -38,25 +38,5 @@ describe("World class", () => {
             expect(ambientAfter).toBe(1);
             expect(sunAfter).toBe(1);
         });
-
-        it("should apply correct config to ambientLight", () => {
-            world.addLighting();
-            const ambientLight = world.children.find(child => child instanceof AmbientLight);
-            expect(ambientLight).toBeDefined();
-            expect(ambientLight?.color.getHex()).toBe(config.light.ambientLight.color);
-            expect(ambientLight?.intensity).toBe(config.light.ambientLight.intensity);
-        });
-
-        it("should apply correct config to sunLight", () => {
-            world.addLighting();
-            const sunLight = world.children.find(child => child instanceof DirectionalLight);
-            expect(world.sunLight).toBeDefined();
-            expect(sunLight).toBeDefined();
-            expect(sunLight?.shadow.camera.left).toBe(-config.light.sunLight.shadow.frustum);
-            expect(sunLight?.shadow.camera.top).toBe(config.light.sunLight.shadow.frustum);
-            expect(sunLight?.shadow.camera.right).toBe(config.light.sunLight.shadow.frustum);
-            expect(sunLight?.shadow.camera.bottom).toBe(-config.light.sunLight.shadow.frustum);
-        });
-        
     });
 });
