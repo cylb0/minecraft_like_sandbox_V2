@@ -2,25 +2,38 @@ jest.unmock("three");
 
 import Clock from "@/helpers/Clock";
 import * as MathUtils from "@/helpers/MathUtils";
-import { DayNightLightConfig } from "@/types/Config";
-import DayNightLight from "@/world/lights/DayNightLight";
-import { CameraHelper, Color, Vector3 } from "three";
+import { AstralLightConfig } from "@/types/Config";
+import AstralLight from "@/world/lights/AstralLight";
+import { CameraHelper, Color, Material, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3 } from "three";
 
-describe("DayNightLight", () => {
-    let config: DayNightLightConfig;
+class TestAstralLight extends AstralLight {
+    protected createMesh(): Mesh {
+        const geometry = new PlaneGeometry(1, 1);
+        const material = new MeshBasicMaterial({ color: 0xffffff });
+        return new Mesh(geometry, material);
+    }
+}
+
+describe("TestAstralLight", () => {
+    let config: AstralLightConfig;
     let center: Vector3;
     let clock: Clock;
 
     beforeEach(() => {
         config = {
+            angleOffset: 0,
             defaultColor: 0xffffff,
             defaultIntensity: 1,
+            mesh: {
+                size: 1,
+            },
             radius: 10,
             shadow: {
                 frustum: 10,
                 mapSize: 1024,
             },
             variations: new Map(),
+            visibility: { from: 0, to: 12 },
         };
         center = new Vector3(0, 0, 0);
         clock = new Clock(60);
@@ -31,15 +44,22 @@ describe("DayNightLight", () => {
     })
 
     it("should create a CameraHelper to the instance when helper is set to true", () => {
-        const light = new DayNightLight(clock, config, center, true);
+        const light = new TestAstralLight(clock, config, center, true);
         const shadowHelper = light.children.filter(child => child instanceof CameraHelper).length;
 
         expect(light.shadowHelper).toBeDefined();
         expect(shadowHelper).toBe(1);
     });
 
+    it("should create a Mesh", () => {
+        const light = new TestAstralLight(clock, config, center, true);
+        const mesh = light.children.filter((child) => child instanceof Mesh).length;
+
+        expect(mesh).toBe(1);
+    });
+
     it("should set shadow properties correctly", () => {
-        const light = new DayNightLight(clock, config, center, false);
+        const light = new TestAstralLight(clock, config, center, false);
 
         expect(light.shadow.camera.left).toBe(-config.shadow.frustum);
         expect(light.shadow.camera.top).toBe(config.shadow.frustum);
@@ -51,7 +71,7 @@ describe("DayNightLight", () => {
     });
 
     it("should update the light's position", () => {
-        const light = new DayNightLight(clock, config, center, false);
+        const light = new TestAstralLight(clock, config, center, false);
         
         const positionMock = new Vector3(1, 2, 3);
         const computeOrbitPositionSpy = jest.spyOn(MathUtils, "computeOrbitPosition");
@@ -65,20 +85,20 @@ describe("DayNightLight", () => {
     });
 
     it("should update the angle based on time", () => {
-        const light = new DayNightLight(clock, config, center, false);
+        const light = new TestAstralLight(clock, config, center, false);
         const getInGameTimeInHoursSpy = jest.spyOn(clock, "getInGameTimeInHours");
         getInGameTimeInHoursSpy.mockReturnValue(12);
         light.update();
 
-        expect(light.angle).toBeCloseTo(Math.PI / 2);
+        expect(light.angle).toBeCloseTo(Math.PI);
 
         getInGameTimeInHoursSpy.mockRestore();
     });
 
     it("should interpolate color and intensity based on time variations", () => {
-        config.variations.set(0, { color: 0x000000, intensity: 1 });
-        config.variations.set(12, { color: 0xffffff, intensity: 2 });
-        const light = new DayNightLight(clock, config, center, false);
+        config.variations!.set(0, { color: 0x000000, intensity: 1 });
+        config.variations!.set(12, { color: 0xffffff, intensity: 2 });
+        const light = new TestAstralLight(clock, config, center, false);
 
         const getInGameTimeInHoursSpy = jest.spyOn(clock, "getInGameTimeInHours");
 
@@ -101,10 +121,10 @@ describe("DayNightLight", () => {
         getInGameTimeInHoursSpy.mockRestore();
     });
 
-    it("should interpolate not interpolate color and intensity when there are not enough variations", () => {
-        config.variations.set(0, { color: 0x000000, intensity: 1 });
+    it("should not interpolate color and intensity when there are not enough variations", () => {
+        config.variations!.set(0, { color: 0x000000, intensity: 1 });
 
-        const light = new DayNightLight(clock, config, center, false);
+        const light = new TestAstralLight(clock, config, center, false);
         const getInGameTimeInHoursSpy = jest.spyOn(clock, "getInGameTimeInHours").mockReturnValue(6);;
 
         light.update();
@@ -116,7 +136,7 @@ describe("DayNightLight", () => {
     });
 
     it("should interpolate not interpolate color and intensity when there are no variations", () => {
-        const light = new DayNightLight(clock, config, center, false);
+        const light = new TestAstralLight(clock, config, center, false);
         const getInGameTimeInHoursSpy = jest.spyOn(clock, "getInGameTimeInHours").mockReturnValue(6);;
 
         light.update();
@@ -125,5 +145,19 @@ describe("DayNightLight", () => {
         expect(light.intensity).toBe(config.defaultIntensity);
 
         getInGameTimeInHoursSpy.mockRestore();
+    });
+
+    it("should dispose of all resources", () => {
+        const light = new TestAstralLight(clock, config, center, false);
+
+        const disposeGeometrySpy = jest.spyOn(light.mesh!.geometry, "dispose");
+        const disposeMaterialSpy = jest.spyOn(light.mesh!.material as Material, "dispose");
+        
+        light.dispose();
+
+        expect(disposeGeometrySpy).toHaveBeenCalled();
+        expect(disposeMaterialSpy).toHaveBeenCalled();
+        expect(light.children.length).toBe(0);
+        expect(light.mesh).toBe(null);
     });
 });
