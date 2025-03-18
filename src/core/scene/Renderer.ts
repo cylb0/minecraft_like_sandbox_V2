@@ -18,7 +18,7 @@ class Renderer {
     static {
         const renderer = Renderer.#renderer;
 
-        renderer.setClearColor(0xadd8e6);
+        // renderer.setClearColor(0xadd8e6);
         renderer.shadowMap.enabled = true;
 
         window.addEventListener("load", () => {

@@ -114,8 +114,11 @@ abstract class AstralLight extends DirectionalLight {
     #updateColorAndIntensity(inGameTime: number): void {
         if (!this.#isStarVisible(inGameTime)) {
             this.intensity = 0;
+            if (this.#mesh) this.#mesh.visible = false;
             return;
         }
+
+        if (this.#mesh) this.#mesh.visible = true;
 
         const variations = this.#getLightingVariations(inGameTime);
         if (!Object.keys(variations).length) return;

@@ -97,8 +97,8 @@ class World extends Group {
      */
     addLighting() {
         this.#setupAmbientLight();
-        this.#setupSunLight(true);
-        this.#setupMoonLight(true);
+        this.#setupSunLight(false);
+        this.#setupMoonLight(false);
     }
 
     /**

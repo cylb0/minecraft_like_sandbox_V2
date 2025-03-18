@@ -72,12 +72,12 @@ function getDefaultLightingConfig(): LightingConfig {
                 mapSize: DEFAULT_SUNLIGHT_SHADOW_MAPSIZE,
             },
             variations: new Map<number, LightVariation>([
-                [6, { color: 0xffa500, intensity: 1 }],
-                [7.5, { color: 0xffffff, intensity: 1.5 }],
+                [6, { color: 0xffa500, intensity: 0 }],
+                [7.5, { color: 0xffffff, intensity: 1 }],
                 [10, { color: 0xffffff, intensity: 2 }],
                 [14, { color: 0xffffff, intensity: 2 }],
-                [16.5, { color: 0xffffff, intensity: 1.5 }],
-                [18, { color: 0xffa500, intensity: 1 }]
+                [16.5, { color: 0xffffff, intensity: 1 }],
+                [18, { color: 0xffa500, intensity: 0 }]
             ]),
             visibility: { from: 6, to: 18 },
         },
