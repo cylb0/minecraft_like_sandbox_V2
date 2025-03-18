@@ -34,18 +34,24 @@ export interface LightingConfig {
         color: ColorRepresentation;
         intensity: number;
     },
-    sunLight: DayNightLightConfig;
+    moonLight: AstralLightConfig,
+    sunLight: AstralLightConfig;
 };
 
-export interface DayNightLightConfig {
+export interface AstralLightConfig {
+    angleOffset: number;
     defaultColor: ColorRepresentation;
     defaultIntensity: number;
+    mesh: {
+        size: number;
+    };
     radius: number;
     shadow: {
         frustum: number,
         mapSize: number;
     },
-    variations: Map<number, LightVariation>;
+    variations?: Map<number, LightVariation>;
+    visibility: { from: number, to: number };
 };
 
 export interface LightVariation {

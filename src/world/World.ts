@@ -2,15 +2,16 @@ import { AmbientLight, Group,Vector3 } from "three";
 import Chunk from "./Chunk";
 import { getDefaultWorldConfig } from "@/config";
 import { WorldConfig } from "@/types/Config";
-import DayNightLight from "./lights/DayNightLight";
 import Clock from "@/helpers/Clock";
+import SunLight from "./lights/SunLight";
+import MoonLight from "./lights/MoonLight";
+import AstralLight from "./lights/AstralLight";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
  * @extends {Group} For easier rendering.
  */
 class World extends Group {
-
     /** Clock to handle time related operations. */
     clock: Clock;
 
@@ -20,7 +21,9 @@ class World extends Group {
     /** Unique seed used for terrain procedural generation. */
     seed: number;
 
-    sunLight: DayNightLight | null = null;
+    moonLight: MoonLight | null = null;
+
+    sunLight: SunLight | null = null;
 
     /**
      * Creates a new World instance.
@@ -62,10 +65,12 @@ class World extends Group {
                 this.remove(child);
             }
 
-            if (child instanceof DayNightLight || child instanceof AmbientLight) {
+            if (child instanceof AstralLight || child instanceof AmbientLight) {
+                child.dispose();
                 this.remove(child);
             }
 
+            this.moonLight = null;
             this.sunLight = null;
         }
     }
@@ -93,6 +98,7 @@ class World extends Group {
     addLighting() {
         this.#setupAmbientLight();
         this.#setupSunLight(true);
+        this.#setupMoonLight(true);
     }
 
     /**
@@ -113,13 +119,30 @@ class World extends Group {
      * @param helper - Boolean flag to trigger shadow camera's frustum.
      */
     #setupSunLight(helper: boolean) {
-        this.sunLight = new DayNightLight(
+        this.sunLight = new SunLight(
             this.clock,
             this.config.light.sunLight,
             new Vector3(0, 0, 0),
             helper
         );
         this.add(this.sunLight);
+    }
+
+    /**
+     * Sets up the directional moon light in the scene.
+     *
+     * - Simulates moonlight casting shadows and providing stronger than ambient directional lighting.
+     * 
+     * @param helper - Boolean flag to trigger shadow camera's frustum.
+     */
+    #setupMoonLight(helper: boolean) {
+        this.moonLight = new MoonLight(
+            this.clock,
+            this.config.light.moonLight,
+            new Vector3(0, 0, 0),
+            helper
+        );
+        this.add(this.moonLight);
     }
 }
 

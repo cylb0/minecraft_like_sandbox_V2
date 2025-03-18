@@ -1,17 +1,18 @@
 import Clock from "@/helpers/Clock";
 import { computeOrbitPosition, computeVariationProgress } from "@/helpers/MathUtils";
-import { DayNightLightConfig, LightVariation } from "@/types/Config";
-import { CameraHelper, Color, DirectionalLight, MathUtils, Vector3 } from "three";
+import { AstralLightConfig, LightVariation } from "@/types/Config";
+import { CameraHelper, Color, DirectionalLight, MathUtils, Mesh, MeshBasicMaterial, Vector3 } from "three";
 
 /**
  * Creates a dynamic DirectionaLight that can be used to simulate astral lighting.
  */
-class DayNightLight extends DirectionalLight {
+abstract class AstralLight extends DirectionalLight {
     #angle!: number;
-    center: Vector3;
-    #clock: Clock;
-    #config: DayNightLightConfig;
+    protected center: Vector3;
+    protected clock: Clock;
+    protected config: AstralLightConfig;
     shadowHelper: CameraHelper | null = null;
+    #mesh: Mesh | null = null;
 
     /**
      * Creates a new DaynNightLight instance.
@@ -26,16 +27,18 @@ class DayNightLight extends DirectionalLight {
      */
     constructor(
         clock: Clock,
-        config: DayNightLightConfig,
+        config: AstralLightConfig,
         center: Vector3,
         helper: boolean
     ) {
         super(config.defaultColor, config.defaultIntensity);
-        this.#clock = clock;
-        this.#config = config;
-        this.center = center;
+        this.clock = clock;
+        this.config = config;
+        
+        this.#mesh = this.createMesh();
+        this.add(this.#mesh);
 
-        this.update();
+        this.center = center;
 
         this.#initShadows();
         
@@ -43,7 +46,11 @@ class DayNightLight extends DirectionalLight {
             this.shadowHelper = new CameraHelper(this.shadow.camera);
             this.add(this.shadowHelper);
         }
+
+        this.update();
     }
+
+    protected abstract createMesh(): Mesh;
 
     /**
      * Updates the light source.
@@ -52,7 +59,7 @@ class DayNightLight extends DirectionalLight {
      * - Updates the light's position.
      */
     update() {
-        const inGameTime = this.#clock.getInGameTimeInHours();
+        const inGameTime = this.clock.getInGameTimeInHours();
         this.#updateAngle(inGameTime);
 
         this.#updatePosition();
@@ -69,7 +76,7 @@ class DayNightLight extends DirectionalLight {
      * @param inGameTime - The in-game time used to compute angle.
      */
     #updateAngle(inGameTime: number): void {
-        let angle = (inGameTime / 24) * Math.PI * 2 - (Math.PI / 2);
+        let angle = (inGameTime / 24) * Math.PI * 2 + this.config.angleOffset;
         angle = (angle % (Math.PI * 2) + (Math.PI * 2)) % (Math.PI * 2);
         this.#angle = angle;
     }
@@ -78,11 +85,22 @@ class DayNightLight extends DirectionalLight {
      * Updates the position of the light source based on it's current angle, radius and rotation center.
      */
     #updatePosition(): void {
-        this.position.copy(computeOrbitPosition(this.center, this.#config.radius, this.#angle));
-
+        const newPosition = computeOrbitPosition(this.center, this.config.radius, this.angle);
+        this.position.copy(newPosition);
+        
         this.shadow.camera.position.copy(this.position);
         this.shadow.camera.updateProjectionMatrix();
         this.shadow.camera.updateMatrixWorld();
+
+        this.#updateMeshPosition();
+    }
+
+    /**
+     * Updates the mesh's position and orientation to match lights properties.
+     */
+    #updateMeshPosition(): void {
+        this.#mesh?.position.copy(this.shadow.camera.position);
+        this.#mesh?.rotation.copy(this.shadow.camera.rotation);
     }
 
     /**
@@ -94,6 +112,11 @@ class DayNightLight extends DirectionalLight {
      * @param inGameTime - The in-game time used to compute color and intensity.
      */
     #updateColorAndIntensity(inGameTime: number): void {
+        if (!this.#isStarVisible(inGameTime)) {
+            this.intensity = 0;
+            return;
+        }
+
         const variations = this.#getLightingVariations(inGameTime);
         if (!Object.keys(variations).length) return;
 
@@ -113,7 +136,35 @@ class DayNightLight extends DirectionalLight {
 
         const intensity = MathUtils.lerp(previous.variation.intensity, next.variation.intensity, progress);
         this.intensity = intensity;
+
+        this.#updateMeshColor();
     }
+
+    /**
+     * Checks wether current in-game time is within visibility range.
+     * 
+     * @param inGameTime - The in-game time to check.
+     * @returns `true` if visible, `false` otherwise.
+     */
+    #isStarVisible(inGameTime: number): boolean {
+        const { from, to } = this.config.visibility;
+        if (from < to) {
+            return inGameTime >= from && inGameTime <= to;
+        } else if (from > to) {
+            return inGameTime >= from || inGameTime <= to;
+        }
+
+        return false;
+    }
+
+    /**
+     * Updates the mesh's color to match config.
+     */
+    #updateMeshColor(): void {
+        if (this.#mesh?.material instanceof MeshBasicMaterial) {
+            this.#mesh?.material.color.copy(this.color);
+        }
+    }    
 
     /**
      * Retrieves both previous and next recorded variations for lighting if they exist.
@@ -131,8 +182,9 @@ class DayNightLight extends DirectionalLight {
             variation: LightVariation,
         }
     } | {} {
-        const keys = Array.from(this.#config.variations.keys()).sort((a, b) => a - b);
+        if (!this.config.variations) return {};
 
+        const keys = Array.from(this.config.variations.keys()).sort((a, b) => a - b);
         if (keys.length <= 1) return {};
 
         let previousKey: number | undefined;
@@ -155,8 +207,8 @@ class DayNightLight extends DirectionalLight {
             previousKey = keys[keys.length - 1];
         }
 
-        const previousVariation = this.#config.variations.get(previousKey)!;
-        const nextVariation = this.#config.variations.get(nextKey)!;
+        const previousVariation = this.config.variations.get(previousKey)!;
+        const nextVariation = this.config.variations.get(nextKey)!;
 
         return { 
             previous: {
@@ -173,20 +225,49 @@ class DayNightLight extends DirectionalLight {
      * Configures shadow frustum and mapSize, toggles shadow casting.
      */
     #initShadows(): void {
-        this.shadow.camera.left = -this.#config.shadow.frustum;
-        this.shadow.camera.top = this.#config.shadow.frustum;
-        this.shadow.camera.right = this.#config.shadow.frustum;
-        this.shadow.camera.bottom = -this.#config.shadow.frustum;
+        this.shadow.camera.left = -this.config.shadow.frustum;
+        this.shadow.camera.top = this.config.shadow.frustum;
+        this.shadow.camera.right = this.config.shadow.frustum;
+        this.shadow.camera.bottom = -this.config.shadow.frustum;
 
-        this.shadow.mapSize.height = this.#config.shadow.mapSize;
-        this.shadow.mapSize.width = this.#config.shadow.mapSize;
+        this.shadow.mapSize.height = this.config.shadow.mapSize;
+        this.shadow.mapSize.width = this.config.shadow.mapSize;
 
         this.castShadow = true;
+    }
+
+    /**
+     * Disposes of the star mesh, material and shadowHelper.
+     */
+    dispose(): void {
+        if (this.#mesh) {
+            this.#mesh.geometry.dispose();
+
+            if (Array.isArray(this.#mesh.material)) {
+                this.#mesh.material.forEach((material) => {
+                    material.dispose();
+                });
+            } else {
+                this.#mesh.material.dispose();
+            }
+
+            this.remove(this.#mesh);
+            this.#mesh = null;
+        }
+
+        if (this.shadowHelper) {
+            this.remove(this.shadowHelper);
+            this.shadowHelper = null;
+        }
     }
 
     get angle(): number {
         return this.#angle;
     }
+
+    get mesh(): Mesh | null {
+        return this.#mesh;
+    }
 }
 
-export default DayNightLight;
+export default AstralLight;

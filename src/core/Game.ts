@@ -46,6 +46,7 @@ class Game {
             const camera = Renderer.useOrbitCamera ? Camera.orbitCamera : Camera.playerCamera;
 
             this.#world.sunLight?.update();
+            this.#world.moonLight?.update();
 
             Renderer.renderer.render(GameScene.scene, camera);
             requestAnimationFrame(animate);
