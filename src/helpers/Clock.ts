@@ -30,7 +30,7 @@ class Clock {
      * @param dayDurationInSeconds 
      */
     constructor(dayDurationInSeconds: number) {
-        if (dayDurationInSeconds <= Clock.MIN_DAY_DURATION) {
+        if (dayDurationInSeconds < Clock.MIN_DAY_DURATION) {
             throw new DayDurationTooShortError(dayDurationInSeconds);
         }
         if (dayDurationInSeconds > Clock.MAX_DAY_DURATION) {
@@ -52,6 +52,7 @@ class Clock {
      * Converts a real-world time in seconds to in-game time (hours) scaled to a 0-24h range.
      * 
      * - Wraps time around `dayDurationInSeconds` to simulate daytime rotation.
+     * @returns The time in hours.
      */
     getInGameTimeInHours(): number {
         let currentTimeInSeconds = this.getRealWorldTimeInSeconds()
