@@ -15,7 +15,7 @@ const scene = Scene.scene;
 const seed = 0;
 const world = new World(seed);
 world.generate();
-world.addLighting();
+// world.addLighting();
 scene.add(world);
 
 // const player = new Player(scene, playerCamera, world);

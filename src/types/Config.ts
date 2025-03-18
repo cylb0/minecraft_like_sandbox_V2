@@ -38,8 +38,8 @@ export interface LightingConfig {
 };
 
 export interface DayNightLightConfig {
-    color: ColorRepresentation;
-    intensity: number;
+    defaultColor: ColorRepresentation;
+    defaultIntensity: number;
     radius: number;
     shadow: {
         frustum: number,

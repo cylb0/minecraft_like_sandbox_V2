@@ -20,13 +20,12 @@ export const DEFAULT_SNOW_LEVEL = DEFAULT_CHUNK_DIMENSIONS.depth * .7;
 export const DEFAULT_RENDER_RADIUS = 2;
 
 // LIGHTING
-/** Day duration in seconds. (max: 86400 = 24h)*/
-export const DEFAULT_DAY_DURATION = 15;
+/** Day duration in seconds. (min: 10, max: 86400 = 24h)*/
+export const DEFAULT_DAY_DURATION = 60;
 
 export const DEFAULT_AMBIENTLIGHT_COLOR = 0xffffff;
 export const DEFAULT_AMBIENTLIGHT_INTENSITY = .1;
 
 export const DEFAULT_SUNLIGHT_COLOR = 0xffffff;
 export const DEFAULT_SUNLIGHT_INTENSITY = 4;
-export const DEFAULT_SUNLIGHT_SHADOW_FRUSTUM_OFFSET = ((DEFAULT_RENDER_RADIUS + 1) * DEFAULT_CHUNK_DIMENSIONS.width);
 export const DEFAULT_SUNLIGHT_SHADOW_MAPSIZE = 1200;

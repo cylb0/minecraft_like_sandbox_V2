@@ -3,17 +3,22 @@ import Chunk from "./Chunk";
 import { getDefaultWorldConfig } from "@/config";
 import { WorldConfig } from "@/types/Config";
 import DayNightLight from "./lights/DayNightLight";
+import Clock from "@/helpers/Clock";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
  * @extends {Group} For easier rendering.
  */
 class World extends Group {
-    /** Unique seed used for terrain procedural generation. */
-    seed: number;
+
+    /** Clock to handle time related operations. */
+    clock: Clock;
 
     /** Object containing all data required for configuration. */
     config: WorldConfig;
+
+    /** Unique seed used for terrain procedural generation. */
+    seed: number;
 
     sunLight: DayNightLight | null = null;
 
@@ -27,10 +32,12 @@ class World extends Group {
         super();
         this.seed = seed;
         this.config = config;
+        this.clock = new Clock(this.config.dayDurationInSeconds);
     }
 
     /**
      * Generates the world by creating and adding chunks within a render radius.
+     * Adds lighting.
      */
     generate() {
         this.dispose();
@@ -39,11 +46,13 @@ class World extends Group {
                 this.#generateChunk(x, z, this.seed);
             }
         }
+        this.addLighting();
     }
 
     /**
      * Disposes of and removes all chunks within the world.
      * It iterates through the world's children and dispose of any `Chunk` instance.
+     * It also removes lights and reinitializes `sunLight`.
      */
     dispose() {
         for (let i = this.children.length - 1; i >= 0; i--) {
@@ -52,6 +61,12 @@ class World extends Group {
                 child.dispose();
                 this.remove(child);
             }
+
+            if (child instanceof DayNightLight || child instanceof AmbientLight) {
+                this.remove(child);
+            }
+
+            this.sunLight = null;
         }
     }
 
@@ -99,11 +114,12 @@ class World extends Group {
      */
     #setupSunLight(helper: boolean) {
         this.sunLight = new DayNightLight(
-            this,
+            this.clock,
             this.config.light.sunLight,
             new Vector3(0, 0, 0),
             helper
         );
+        this.add(this.sunLight);
     }
 }
 
