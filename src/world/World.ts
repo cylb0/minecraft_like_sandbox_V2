@@ -25,7 +25,7 @@ class World extends Group {
 
     sunLight: SunLight | null = null;
 
-    generatedChunks: Map<string, Chunk> = new Map();
+    #bufferedChunks: Map<string, Chunk> = new Map();
 
     /**
      * Creates a new World instance.
@@ -46,6 +46,7 @@ class World extends Group {
      * - Generates chunks within `renderRadius + 1` because chunks will need access to outer chunk data for occlusion rendering.
      * - Saves chunks in a Map for further access.
      * - Adds lighting.
+     * - Chunks are added to the scene even when empty.
      */
     generate() {
         this.dispose();
@@ -56,7 +57,9 @@ class World extends Group {
             for (let z = -renderRadius; z <= renderRadius; z++) {
                 const chunkKey = `${x},${z}`;
                 const chunk = this.#generateChunk(x, z);
-                this.generatedChunks.set(chunkKey, chunk);
+                this.#bufferedChunks.set(chunkKey, chunk);
+                this.add(chunk);
+                chunk.visible = false;
             }
         }
         
@@ -74,10 +77,10 @@ class World extends Group {
         for (let x = -renderRadius; x <= renderRadius; x++) {
             for (let z = -renderRadius; z <= renderRadius; z++) {
                 const chunkKey = `${x},${z}`;
-                const chunk = this.generatedChunks.get(chunkKey);
+                const chunk = this.#bufferedChunks.get(chunkKey);
 
                 if (chunk) {
-                    this.add(chunk);
+                    chunk.visible = true;
                     chunk.render();
                 }
 
@@ -92,21 +95,21 @@ class World extends Group {
      * It also removes lights and reinitializes `sunLight`.
      */
     dispose() {
-        for (let i = this.children.length - 1; i >= 0; i--) {
-            const child = this.children[i];
-            if (child instanceof Chunk) {
-                child.dispose();
-                this.remove(child);
-            }
+        this.#bufferedChunks.forEach((chunk) => {
+            chunk.dispose();
+            this.remove(chunk);
+        });
+        this.#bufferedChunks.clear();
 
+        this.children.forEach((child) => {
             if (child instanceof AstralLight || child instanceof AmbientLight) {
                 child.dispose();
                 this.remove(child);
             }
+        })
 
-            this.moonLight = null;
-            this.sunLight = null;
-        }
+        this.moonLight = null;
+        this.sunLight = null;
     }
 
     /**

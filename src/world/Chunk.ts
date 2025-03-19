@@ -365,7 +365,9 @@ class Chunk extends Group {
         let hasTransparentNeighbor = false;
 
         for (const block of neighbors) {
-            if (block === null) continue;
+            if (block === null) {
+                continue
+            };
 
             if (block.blockType === BlockType.Empty) {
                 hasEmptyNeighbor = true;
@@ -432,8 +434,8 @@ class Chunk extends Group {
 
         if (!neighborChunk) return null;
 
-        const neighborBlockX = offsetX === -1 ? this.#config.size.chunkWidth : offsetX === 1 ? 0 : blockPosition.x;
-        const neighborBlockZ = offsetZ === -1 ? this.#config.size.chunkWidth : offsetZ === 1 ? 0 : blockPosition.z;
+        const neighborBlockX = offsetX === -1 ? this.#config.size.chunkWidth - 1 : offsetX === 1 ? 0 : blockPosition.x;
+        const neighborBlockZ = offsetZ === -1 ? this.#config.size.chunkWidth - 1 : offsetZ === 1 ? 0 : blockPosition.z;
 
         return neighborChunk.getBlock(neighborBlockX, blockPosition.y, neighborBlockZ);
     }
