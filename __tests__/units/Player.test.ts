@@ -5,7 +5,6 @@ import { BoxGeometry, Mesh, PerspectiveCamera, Scene } from "three";
 
 jest.mock("@/world/World");
 jest.mock("three/examples/jsm/math/SimplexNoise");
-jest.mock("@/world/lights/DayNightLight");
 
 describe("Player class", () => {
     let camera: PerspectiveCamera;
