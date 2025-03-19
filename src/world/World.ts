@@ -25,6 +25,8 @@ class World extends Group {
 
     sunLight: SunLight | null = null;
 
+    #bufferedChunks: Map<string, Chunk> = new Map();
+
     /**
      * Creates a new World instance.
      *
@@ -40,16 +42,51 @@ class World extends Group {
 
     /**
      * Generates the world by creating and adding chunks within a render radius.
-     * Adds lighting.
+     * 
+     * - Generates chunks within `renderRadius + 1` because chunks will need access to outer chunk data for occlusion rendering.
+     * - Saves chunks in a Map for further access.
+     * - Adds lighting.
+     * - Chunks are added to the scene even when empty.
      */
     generate() {
         this.dispose();
-        for (let x = -this.config.size.renderRadius; x <= this.config.size.renderRadius; x++) {
-            for (let z = -this.config.size.renderRadius; z <= this.config.size.renderRadius; z++) {
-                this.#generateChunk(x, z, this.seed);
+
+        const renderRadius = this.config.size.renderRadius + 1;
+
+        for (let x = -renderRadius; x <= renderRadius; x++) {
+            for (let z = -renderRadius; z <= renderRadius; z++) {
+                const chunkKey = `${x},${z}`;
+                const chunk = this.#generateChunk(x, z);
+                this.#bufferedChunks.set(chunkKey, chunk);
+                this.add(chunk);
+                chunk.visible = false;
             }
         }
+        
         this.addLighting();
+
+        this.updateChunksRendering();
+    }
+
+    /**
+     * Renders all chunks within `renderRadius` distance.
+     */
+    updateChunksRendering() {
+        const renderRadius = this.config.size.renderRadius;
+
+        for (let x = -renderRadius; x <= renderRadius; x++) {
+            for (let z = -renderRadius; z <= renderRadius; z++) {
+                const chunkKey = `${x},${z}`;
+                const chunk = this.#bufferedChunks.get(chunkKey);
+
+                if (chunk) {
+                    chunk.visible = true;
+                    chunk.render();
+                }
+
+                this.#generateChunk(x, z);
+            }
+        }
     }
 
     /**
@@ -58,21 +95,21 @@ class World extends Group {
      * It also removes lights and reinitializes `sunLight`.
      */
     dispose() {
-        for (let i = this.children.length - 1; i >= 0; i--) {
-            const child = this.children[i];
-            if (child instanceof Chunk) {
-                child.dispose();
-                this.remove(child);
-            }
+        this.#bufferedChunks.forEach((chunk) => {
+            chunk.dispose();
+            this.remove(chunk);
+        });
+        this.#bufferedChunks.clear();
 
+        this.children.forEach((child) => {
             if (child instanceof AstralLight || child instanceof AmbientLight) {
                 child.dispose();
                 this.remove(child);
             }
+        })
 
-            this.moonLight = null;
-            this.sunLight = null;
-        }
+        this.moonLight = null;
+        this.sunLight = null;
     }
 
     /**
@@ -80,13 +117,14 @@ class World extends Group {
      * 
      * @param x - The worldGrid-coordinate of the chunk.
      * @param z - The worldGrid-coordinate of the chunk.
-     * @param seed - The seed used for chunk generation.
+     * @returns A chunk object.
      */
-    #generateChunk(x: number, z: number, seed: number) {
-        const chunk = new Chunk(seed, this.config);
+    #generateChunk(x: number, z: number): Chunk {
+        const chunk = new Chunk(this.seed, this.config);
         chunk.position.set(x * this.config.size.chunkWidth, 0, z * this.config.size.chunkWidth);
         chunk.generate();
-        this.add(chunk);
+
+        return chunk;
     }
 
     /**

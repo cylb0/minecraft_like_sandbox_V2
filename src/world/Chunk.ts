@@ -3,7 +3,7 @@ import BlockRenderer from "@/helpers/BlockRenderer";
 import PseudoRandomGenerator from "@/helpers/PseudoRandomGenerator";
 import { Block, BlockData, BlockType, DistributionType } from "@/types/Blocks";
 import { WorldConfig } from "@/types/Config";
-import { Group, InstancedMesh, Matrix4 } from "three";
+import { Group, InstancedMesh, Matrix4, Vector3 } from "three";
 
 import { SimplexNoise } from "three/examples/jsm/math/SimplexNoise";
 
@@ -55,6 +55,10 @@ class Chunk extends Group {
         this.#generateStoneTerrain();
         this.#generateSurface();
         this.#generateWater();
+    }
+
+    /** Renders a chunk. */
+    render() {
         this.#generateMeshes();
     }
 
@@ -357,11 +361,26 @@ class Chunk extends Group {
     #testOcclusionCulling(x: number, y: number, z: number): boolean {
         const neighbors = this.getNeighbors(x, y, z);
 
-        return neighbors.some(block => {
-            if (!block) return true;
-            if (block.blockType === BlockType.Empty) return true;
-            return this.isBlockTransparent(block.blockType);
-        })
+        let hasEmptyNeighbor = false;
+        let hasTransparentNeighbor = false;
+
+        for (const block of neighbors) {
+            if (block === null) {
+                continue
+            };
+
+            if (block.blockType === BlockType.Empty) {
+                hasEmptyNeighbor = true;
+                break;
+            }
+
+            if (this.isBlockTransparent(block.blockType)) {
+                hasTransparentNeighbor = true;
+                break;
+            }
+        }
+
+        return hasEmptyNeighbor || hasTransparentNeighbor;
     }
 
     /**
@@ -376,15 +395,49 @@ class Chunk extends Group {
      */
     getNeighbors(x: number, y: number, z: number): Array<Block | null> {
         if (!this.isBlockInBounds(x, y, z)) return [];
-
-        return [
-            this.getBlock(x - 1, y, z) ?? EMPTY_BLOCK,
-            this.getBlock(x + 1, y, z) ?? EMPTY_BLOCK,
-            this.getBlock(x , y - 1, z) ?? EMPTY_BLOCK,
-            this.getBlock(x , y + 1, z) ?? EMPTY_BLOCK,
-            this.getBlock(x , y, z - 1) ?? EMPTY_BLOCK,
-            this.getBlock(x , y, z + 1) ?? EMPTY_BLOCK,
+        
+        const neighbors = [
+            this.getBlock(x - 1, y, z),
+            this.getBlock(x + 1, y, z),
+            this.getBlock(x , y - 1, z),
+            this.getBlock(x , y + 1, z),
+            this.getBlock(x , y, z - 1),
+            this.getBlock(x , y, z + 1),
         ];
+
+        const blockPosition = new Vector3(x, y, z);
+
+        if (x === 0) neighbors[0] = this.#getNeighborChunkBlock(-1, 0, blockPosition);
+        if (x === this.#config.size.chunkWidth - 1) neighbors[1] = this.#getNeighborChunkBlock(1, 0, blockPosition);
+        if (z === 0) neighbors[4] = this.#getNeighborChunkBlock(0, -1, blockPosition);
+        if (z === this.#config.size.chunkWidth - 1) neighbors[5] = this.#getNeighborChunkBlock(0, 1, blockPosition);
+
+        return neighbors;
+    }
+
+    /**
+     * Looks for the neighbor of a given block in the adjacent chunk.
+     * 
+     * @param offsetX - The x-offset in world grid relative to the given block's chunk.
+     * @param offsetZ - The z-offset in world grid relative to the given block's chunk.
+     * @param blockPosition - The `Vector3` position of the block to retrieve neighbor of.
+     * @returns a `Block` object if found, `null` otherwise. 
+     */
+    #getNeighborChunkBlock(offsetX: number, offsetZ: number, blockPosition: Vector3): Block | null {
+        const neighborChunkPosition = new Vector3(
+            this.position.x + offsetX * this.#config.size.chunkWidth,
+            this.position.y,
+            this.position.z + offsetZ * this.#config.size.chunkWidth,
+        );
+
+        const neighborChunk = this.parent?.children.find((child) => child instanceof Chunk && child.position.equals(neighborChunkPosition)) as Chunk | undefined;
+
+        if (!neighborChunk) return null;
+
+        const neighborBlockX = offsetX === -1 ? this.#config.size.chunkWidth - 1 : offsetX === 1 ? 0 : blockPosition.x;
+        const neighborBlockZ = offsetZ === -1 ? this.#config.size.chunkWidth - 1 : offsetZ === 1 ? 0 : blockPosition.z;
+
+        return neighborChunk.getBlock(neighborBlockX, blockPosition.y, neighborBlockZ);
     }
 
     /**
