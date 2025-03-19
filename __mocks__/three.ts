@@ -1,5 +1,6 @@
 import { PerspectiveCameraMock } from "./three/Camera";
 import { BoxGeometryMock } from "./three/Geometry";
+import { DirectionalLightMock } from "./three/Lights";
 import { TextureLoaderMock, TextureMock } from "./three/Loaders";
 import { MeshBasicMaterialMock, MeshLambertMaterialMock } from "./three/Material";
 import { GroupMock, MeshMock } from "./three/Object3D";
@@ -9,6 +10,7 @@ import WebGLRendererMock from "./three/WebGLRenderer";
 const actualThree = jest.requireActual("three");
 
 export const BoxGeometry = BoxGeometryMock;
+export const DirectionaLight = DirectionalLightMock;
 export const Group = GroupMock;
 export const PerspectiveCamera = PerspectiveCameraMock;
 export const Mesh = MeshMock;
@@ -21,8 +23,8 @@ export const Vector3 = actualThree.Vector3;
 export const WebGLRenderer = WebGLRendererMock;
 
 const three = {
-    ...actualThree,
     BoxGeometry: BoxGeometryMock,
+    DirectionaLight: DirectionalLightMock,
     Group: GroupMock,
     Mesh: MeshMock,
     MeshBasicMaterial: MeshBasicMaterialMock,

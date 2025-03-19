@@ -1,18 +1,29 @@
-import { AmbientLight, CameraHelper, DirectionalLight, Group,Vector3 } from "three";
+import { AmbientLight, Group,Vector3 } from "three";
 import Chunk from "./Chunk";
 import { getDefaultWorldConfig } from "@/config";
 import { WorldConfig } from "@/types/Config";
+import Clock from "@/helpers/Clock";
+import SunLight from "./lights/SunLight";
+import MoonLight from "./lights/MoonLight";
+import AstralLight from "./lights/AstralLight";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
  * @extends {Group} For easier rendering.
  */
 class World extends Group {
-    /** Unique seed used for terrain procedural generation. */
-    seed: number;
+    /** Clock to handle time related operations. */
+    clock: Clock;
 
     /** Object containing all data required for configuration. */
     config: WorldConfig;
+
+    /** Unique seed used for terrain procedural generation. */
+    seed: number;
+
+    moonLight: MoonLight | null = null;
+
+    sunLight: SunLight | null = null;
 
     /**
      * Creates a new World instance.
@@ -24,10 +35,12 @@ class World extends Group {
         super();
         this.seed = seed;
         this.config = config;
+        this.clock = new Clock(this.config.dayDurationInSeconds);
     }
 
     /**
      * Generates the world by creating and adding chunks within a render radius.
+     * Adds lighting.
      */
     generate() {
         this.dispose();
@@ -36,11 +49,13 @@ class World extends Group {
                 this.#generateChunk(x, z, this.seed);
             }
         }
+        this.addLighting();
     }
 
     /**
      * Disposes of and removes all chunks within the world.
      * It iterates through the world's children and dispose of any `Chunk` instance.
+     * It also removes lights and reinitializes `sunLight`.
      */
     dispose() {
         for (let i = this.children.length - 1; i >= 0; i--) {
@@ -49,6 +64,14 @@ class World extends Group {
                 child.dispose();
                 this.remove(child);
             }
+
+            if (child instanceof AstralLight || child instanceof AmbientLight) {
+                child.dispose();
+                this.remove(child);
+            }
+
+            this.moonLight = null;
+            this.sunLight = null;
         }
     }
 
@@ -74,7 +97,8 @@ class World extends Group {
      */
     addLighting() {
         this.#setupAmbientLight();
-        this.#setupSunLight(undefined, false);
+        this.#setupSunLight(false);
+        this.#setupMoonLight(false);
     }
 
     /**
@@ -90,27 +114,35 @@ class World extends Group {
     /**
      * Sets up the directional sun light in the scene.
      *
-     * - Simulates sunlight casting shadows and providing stronger than ambient directional lightening.
+     * - Simulates sunlight casting shadows and providing stronger than ambient directional lighting.
      * 
-     * @param position - The position of the light source.
      * @param helper - Boolean flag to trigger shadow camera's frustum.
      */
-    #setupSunLight(position: Vector3 = this.config.light.sunLight.position, helper: boolean) {
-        const sunLight = new DirectionalLight(this.config.light.sunLight.color, this.config.light.sunLight.intensity);
-        sunLight.position.copy(position);
-        sunLight.shadow.camera.left = this.config.light.sunLight.shadow.frustum.left;
-        sunLight.shadow.camera.right = this.config.light.sunLight.shadow.frustum.right;
-        sunLight.shadow.camera.top = this.config.light.sunLight.shadow.frustum.top;
-        sunLight.shadow.camera.bottom = this.config.light.sunLight.shadow.frustum.bottom;
+    #setupSunLight(helper: boolean) {
+        this.sunLight = new SunLight(
+            this.clock,
+            this.config.light.sunLight,
+            new Vector3(0, 0, 0),
+            helper
+        );
+        this.add(this.sunLight);
+    }
 
-        sunLight.shadow.mapSize.height = this.config.light.sunLight.shadow.mapSize;
-        sunLight.shadow.mapSize.width = this.config.light.sunLight.shadow.mapSize;
-        
-        const shadowHelper = new CameraHelper(sunLight.shadow.camera);
-        this.add(shadowHelper);
-
-        sunLight.castShadow = true;
-        this.add(sunLight);
+    /**
+     * Sets up the directional moon light in the scene.
+     *
+     * - Simulates moonlight casting shadows and providing stronger than ambient directional lighting.
+     * 
+     * @param helper - Boolean flag to trigger shadow camera's frustum.
+     */
+    #setupMoonLight(helper: boolean) {
+        this.moonLight = new MoonLight(
+            this.clock,
+            this.config.light.moonLight,
+            new Vector3(0, 0, 0),
+            helper
+        );
+        this.add(this.moonLight);
     }
 }
 

@@ -1,6 +1,8 @@
-import { ColorRepresentation, Vector3 } from "three";
+import { ColorRepresentation } from "three";
 
 export interface WorldConfig {
+    /** Duration of the day in seconds. */
+    dayDurationInSeconds: number;
     terrain: TerrainConfig;
     water: WaterConfig;
     size: WorldSizeConfig;
@@ -32,18 +34,27 @@ export interface LightingConfig {
         color: ColorRepresentation;
         intensity: number;
     },
-    sunLight: {
-        color: ColorRepresentation;
-        intensity: number;
-        shadow: {
-            frustum: {
-                left: number;
-                right: number;
-                bottom: number;
-                top: number;
-            },
-            mapSize: number;
-        },
-        position: Vector3;
-    }
+    moonLight: AstralLightConfig,
+    sunLight: AstralLightConfig;
+};
+
+export interface AstralLightConfig {
+    angleOffset: number;
+    defaultColor: ColorRepresentation;
+    defaultIntensity: number;
+    mesh: {
+        size: number;
+    };
+    radius: number;
+    shadow: {
+        frustum: number,
+        mapSize: number;
+    },
+    variations?: Map<number, LightVariation>;
+    visibility: { from: number, to: number };
+};
+
+export interface LightVariation {
+    color: ColorRepresentation,
+    intensity: number;
 };

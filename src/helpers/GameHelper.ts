@@ -23,7 +23,7 @@ class GameHelper {
      * - Size is determined by the largest world dimension.
      */
     public static displayAxesHelper(): void {
-        const axesHelper = new AxesHelper(10);
+        const axesHelper = new AxesHelper(100);
         GameScene.scene.add(axesHelper);
     }
 }

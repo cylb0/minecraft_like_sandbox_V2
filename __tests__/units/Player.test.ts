@@ -15,7 +15,6 @@ describe("Player class", () => {
 
     beforeEach(() => {
         scene = new Scene();
-        console.log(scene)
         camera = new PerspectiveCamera();
         world = new World(seed);
         player = new Player(scene, camera, world);

@@ -37,9 +37,11 @@ export const TEXTURES_PATHS = {
     grass_top: "textures/grass_top.png",
     grass_side: "textures/grass_side.png",
     iron_ore: "textures/iron_ore.png",
+    moon: "textures/astral/moon.png",
     sand: "textures/sand.png",
     snow: "textures/snow.png",
     stone: "textures/stone.png",
+    sun: "textures/astral/sun.png",
 }
 
 /**
