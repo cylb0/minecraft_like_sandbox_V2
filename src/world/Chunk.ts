@@ -55,6 +55,10 @@ class Chunk extends Group {
         this.#generateStoneTerrain();
         this.#generateSurface();
         this.#generateWater();
+    }
+
+    /** Renders a chunk. */
+    render() {
         this.#generateMeshes();
     }
 
