@@ -126,16 +126,17 @@ describe("TestAstralLight", () => {
 
         const light = new TestAstralLight(clock, config, center, false);
         const getInGameTimeInHoursSpy = jest.spyOn(clock, "getInGameTimeInHours").mockReturnValue(6);;
-
+        console.log("time",clock.getInGameTimeInHours())
         light.update();
-
+        console.log("light.color.getHex", light.color.getHex())
+        console.log("light.intensity", light.intensity)
         expect(light.color.getHex()).toBe(config.defaultColor);
         expect(light.intensity).toBe(config.defaultIntensity);
 
         getInGameTimeInHoursSpy.mockRestore();
     });
 
-    it("should interpolate not interpolate color and intensity when there are no variations", () => {
+    it("should not interpolate color and intensity when there are no variations", () => {
         const light = new TestAstralLight(clock, config, center, false);
         const getInGameTimeInHoursSpy = jest.spyOn(clock, "getInGameTimeInHours").mockReturnValue(6);;
 
