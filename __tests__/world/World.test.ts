@@ -2,8 +2,9 @@ jest.unmock("three");
 jest.unmock("@/world/World");
 
 import { getDefaultWorldConfig } from "@/config";
+import SunLight from "@/world/lights/SunLight";
 import World from "@/world/World";
-import { AmbientLight, DirectionalLight } from "three";
+import { AmbientLight } from "three";
 
 describe("World class", () => {
     let world: World;
@@ -28,10 +29,10 @@ describe("World class", () => {
     describe("addLighting", () => {
         it("should add ambient and sun lights to the world", () => {
             const ambientBefore = world.children.filter(child => child instanceof AmbientLight).length;
-            const sunBefore = world.children.filter(child => child instanceof DirectionalLight).length;
+            const sunBefore = world.children.filter(child => child instanceof SunLight).length;
             world.addLighting();
             const ambientAfter = world.children.filter(child => child instanceof AmbientLight).length;
-            const sunAfter = world.children.filter(child => child instanceof DirectionalLight).length;
+            const sunAfter = world.children.filter(child => child instanceof SunLight).length;
 
             expect(ambientBefore).toBe(0);
             expect(sunBefore).toBe(0);
