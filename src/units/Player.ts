@@ -42,6 +42,29 @@ class Player extends Group implements IMovable {
     moveDirection(direction: Vector3, multiplier: number): void {
         throw new Error("Method not implemented.");
     }
+
+    /**
+     * Attaches the camera the the Player Group.
+     *
+     * - Moves camera's position to the player's head if FPS mode.
+     * - Offsets camera's position if TPS mode.
+     */
+    #attachCamera() {
+        if (!this.children.includes(this.#camera)) {
+            this.add(this.#camera);
+        }
+
+        const mode = Camera.mode;
+
+        if (mode === CameraMode.FPS) {
+            this.#camera.position.set(0, PLAYER_DIMENSIONS.height * 3 / 4, 0);
+        } else if (mode === CameraMode.TPS) {
+            const offset = Camera.tpsOffset;
+            this.#camera.position.set(offset.x, offset.y, offset.z);
+            this.#camera.lookAt(this.position);
+        }
+    }
+
     /**
      * Finds a safe spawn for the player.
      *
