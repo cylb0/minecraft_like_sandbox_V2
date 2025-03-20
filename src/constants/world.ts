@@ -24,7 +24,7 @@ export const DEFAULT_RENDER_RADIUS = 2;
 export const DEFAULT_DAY_DURATION = 30;
 
 export const DEFAULT_AMBIENTLIGHT_COLOR = 0xffffff;
-export const DEFAULT_AMBIENTLIGHT_INTENSITY = .05;
+export const DEFAULT_AMBIENTLIGHT_INTENSITY = 1;
 
 export const DEFAULT_MOONLIGHT_OFFSET = Math.PI / 2;
 export const DEFAULT_MOONLIGHT_COLOR = 0xffffff;

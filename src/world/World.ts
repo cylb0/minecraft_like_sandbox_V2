@@ -1,11 +1,11 @@
 import { AmbientLight, Group,Vector3 } from "three";
-import Chunk from "./Chunk";
+import Chunk from "@/world/Chunk";
 import { getDefaultWorldConfig } from "@/config";
 import { WorldConfig } from "@/types/Config";
 import Clock from "@/helpers/Clock";
-import SunLight from "./lights/SunLight";
-import MoonLight from "./lights/MoonLight";
-import AstralLight from "./lights/AstralLight";
+import SunLight from "@/world/lights/SunLight";
+import MoonLight from "@/world/lights/MoonLight";
+import AstralLight from "@/world/lights/AstralLight";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
@@ -67,6 +67,7 @@ class World extends Group {
 
         this.updateChunksRendering();
     }
+
     /**
      * Retrieves a block to land on to based on world {x, z} coordinates.
      * 
@@ -140,26 +141,15 @@ class World extends Group {
     }
 
     /**
-     * Disposes of and removes all chunks within the world.
-     * It iterates through the world's children and dispose of any `Chunk` instance.
-     * It also removes lights and reinitializes `sunLight`.
+     * Setups lighting on the scene.
+     * 
+     * - Creates indirect lighting, making everything uniformly lit.
+     * - Creates sunlight coming from a specific direction.
      */
-    dispose() {
-        this.#bufferedChunks.forEach((chunk) => {
-            chunk.dispose();
-            this.remove(chunk);
-        });
-        this.#bufferedChunks.clear();
-
-        this.children.forEach((child) => {
-            if (child instanceof AstralLight || child instanceof AmbientLight) {
-                child.dispose();
-                this.remove(child);
-            }
-        })
-
-        this.moonLight = null;
-        this.sunLight = null;
+    addLighting() {
+        this.#setupAmbientLight();
+        this.#setupSunLight(false);
+        this.#setupMoonLight(false);
     }
 
     /**
@@ -175,18 +165,6 @@ class World extends Group {
         chunk.generate();
 
         return chunk;
-    }
-
-    /**
-     * Setups lighting on the scene.
-     * 
-     * - Creates indirect lighting, making everything uniformly lit.
-     * - Creates sunlight coming from a specific direction.
-     */
-    addLighting() {
-        this.#setupAmbientLight();
-        this.#setupSunLight(false);
-        this.#setupMoonLight(false);
     }
 
     /**
@@ -231,6 +209,29 @@ class World extends Group {
             helper
         );
         this.add(this.moonLight);
+    }
+
+    /**
+     * Disposes of and removes all chunks within the world.
+     * It iterates through the world's children and dispose of any `Chunk` instance.
+     * It also removes lights and reinitializes `sunLight`.
+     */
+    dispose() {
+        this.#bufferedChunks.forEach((chunk) => {
+            chunk.dispose();
+            this.remove(chunk);
+        });
+        this.#bufferedChunks.clear();
+
+        this.children.forEach((child) => {
+            if (child instanceof AstralLight || child instanceof AmbientLight) {
+                child.dispose();
+                this.remove(child);
+            }
+        })
+
+        this.moonLight = null;
+        this.sunLight = null;
     }
 }
 

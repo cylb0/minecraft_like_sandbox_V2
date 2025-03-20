@@ -2,14 +2,16 @@ import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
 import { PLAYER_DIMENSIONS, PLAYER_SPAWN_POSITION } from "@/constants/player";
 import Camera from "@/core/scene/Camera";
 import IMovable from "@/interfaces/IMovable";
+import { CameraMode } from "@/types/Camera";
 import World from "@/world/World";
-import { BoxGeometry, Group, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, Scene, Vector3 } from "three";
+import { BoxGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
 
 /**
  * Represents the player.
  * @extends {Group} For easier rendering.
  */
 class Player extends Group implements IMovable {
+    #camera: PerspectiveCamera;
     #scene: Scene;
     #world: World;
 
@@ -24,15 +26,19 @@ class Player extends Group implements IMovable {
      */
     constructor(scene: Scene, camera: PerspectiveCamera, world: World) {
         super();
+        this.#camera = camera;
         this.#scene = scene;
         this.#world = world;
-        this.add(camera);
-
+        
         const playerModel = this.#createPlayer();
         this.add(playerModel);
-        this.position.copy(new Vector3(PLAYER_SPAWN_POSITION.x, PLAYER_SPAWN_POSITION.y, PLAYER_SPAWN_POSITION.z));
+        
+        const spawn = this.#findSpawn();
+        this.position.copy(spawn);
 
         scene.add(this);
+
+        this.#attachCamera();
     }
 
     move(): void {

@@ -41,15 +41,13 @@ class Game {
         document.body.append(stats.dom);
 
         const animate = () => {
-            const canvas = Renderer.renderer.domElement;
-            stats.update();
-            const camera = Camera.camera;
-            // console.log(Renderer.renderer.info.render.triangles)
+            requestAnimationFrame(animate);
+
             this.#world.sunLight?.update();
             this.#world.moonLight?.update();
-
-            Renderer.renderer.render(GameScene.scene, camera);
-            requestAnimationFrame(animate);
+            
+            Renderer.renderer.render(GameScene.scene, Camera.camera);
+            stats.update();
         }
         animate();
     }
