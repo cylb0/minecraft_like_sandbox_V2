@@ -33,39 +33,23 @@ describe("Camera singleton", () => {
         });
 
         test("should create OrbitControls instance when switching to ORBIT mode", () => {
-            Camera.switchCamera(CameraMode.ORBIT, positionMock)
+            Camera.switchCamera(CameraMode.ORBIT)
             expect(Camera.controls).toBeDefined();
             expect(OrbitControls).toHaveBeenCalledWith(Camera.camera, Renderer.renderer.domElement);
         });
 
         test("should dispose of OrbitControls when switching to another mode", () => {
-            Camera.switchCamera(CameraMode.ORBIT, positionMock);
+            Camera.switchCamera(CameraMode.ORBIT);
 
             expect(Camera.controls).toBeDefined();
 
             const disposeSpy = jest.spyOn(Camera.controls!, "dispose");
 
-            Camera.switchCamera(CameraMode.PLAYER, positionMock);
+            Camera.switchCamera(CameraMode.FPS);
 
             expect(disposeSpy).toHaveBeenCalledTimes(1);
             
             disposeSpy.mockRestore();
         });
-
-        test("should set the camera position when switching to ORBIT mode", () => {
-            const position = new Vector3(2, 0, 2);
-            const copySpy = jest.spyOn(Camera.camera.position, "copy");
-
-            Camera.switchCamera(CameraMode.ORBIT, position);
-
-            expect(copySpy).toHaveBeenCalledWith(position);
-            expect(Camera.camera.position).toEqual(expect.objectContaining({
-                x: position.x,
-                y: position.y,
-                z: position.z,
-            }));
-
-            copySpy.mockRestore();
-        })
     });
 });
