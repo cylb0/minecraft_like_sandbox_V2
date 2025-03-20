@@ -1,6 +1,5 @@
-import { WebGLRenderer, ShadowMapType } from 'three';
+import { WebGLRenderer } from 'three';
 import Camera from '@/core/scene/Camera';
-import { getCameraAspect } from '@/constants/camera';
 
 /**
  * Singleton class responsible for rendering the scene.
@@ -12,8 +11,6 @@ import { getCameraAspect } from '@/constants/camera';
 class Renderer {
        /** The `THREE.WebGLRenderer` instance used to render the scene. */
     static #renderer: WebGLRenderer = new WebGLRenderer();
-
-    static useOrbitCamera: boolean;
 
     static {
         const renderer = Renderer.#renderer;
@@ -44,18 +41,8 @@ class Renderer {
      * - Resizes the renderer based on the new window size.
      */
     static #onResize(): void {
-        const camera = Renderer.useOrbitCamera ? Camera.orbitCamera : Camera.playerCamera;
-        camera.aspect = getCameraAspect();
-        camera.updateProjectionMatrix();
+        Camera.updateAspectRatio();
         this.#renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    /**
-     * Sets the camera to use for rendering.
-     * @param useOrbitCamera - Set to `true` to use the orbit camera, `false` to use the player camera.
-     */
-    static setCamera(useOrbitCamera: boolean): void {
-        Renderer.useOrbitCamera = useOrbitCamera;
     }
 }
 

@@ -1,4 +1,5 @@
 const OrbitControlsMock = jest.fn().mockImplementation(() => ({
+    dispose: jest.fn(),
     target: {
         set: jest.fn(),
     },

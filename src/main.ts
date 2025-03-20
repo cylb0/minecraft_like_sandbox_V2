@@ -7,7 +7,8 @@ import GameHelper from "@/helpers/GameHelper";
 import Renderer from "@/core/scene/Renderer";
 import UI from "./helpers/Ui";
 import { Vector3 } from "three";
-import { preloadTextures } from "./blocks/textures";
+import { preloadTextures } from "@/blocks/textures";
+import { CameraMode } from "@/types/Camera";
 
 await preloadTextures();
 
@@ -20,7 +21,7 @@ scene.add(world);
 
 // const player = new Player(scene, playerCamera, world);
 
-Camera.addOrbitControls(new Vector3(64, 64, 64));
+Camera.switchCamera(CameraMode.ORBIT, new Vector3(64, 64, 64));
 
 const game = new Game(world);
 

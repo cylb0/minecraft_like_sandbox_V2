@@ -43,7 +43,7 @@ class Game {
         const animate = () => {
             const canvas = Renderer.renderer.domElement;
             stats.update();
-            const camera = Renderer.useOrbitCamera ? Camera.orbitCamera : Camera.playerCamera;
+            const camera = Camera.camera;
             // console.log(Renderer.renderer.info.render.triangles)
             this.#world.sunLight?.update();
             this.#world.moonLight?.update();
