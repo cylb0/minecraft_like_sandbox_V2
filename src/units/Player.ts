@@ -41,6 +41,14 @@ class Player extends Group implements IMovable {
     moveDirection(direction: Vector3, multiplier: number): void {
         throw new Error("Method not implemented.");
     }
+    /**
+     * Player's position is offset by half his height.
+     * 
+     * @returns The player's position offset.
+     */
+    #getPlayerPositionOffset(): Vector3 {
+        return new Vector3(0, PLAYER_DIMENSIONS.height / 2, 0);
+    }
 
     /**
      * Creates and returns a `THREE.Mesh` representing the player.
