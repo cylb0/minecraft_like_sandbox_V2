@@ -82,7 +82,7 @@ class Player extends Group implements IMovable {
      */
     #findSpawn(): Vector3 {
         const { x, z } = PLAYER_SPAWN_POSITION;
-        const freeSpot = this.#world.findSPawnPosition(x, z);
+        const freeSpot = this.#world.findSpawnPosition(x, z);
 
         return freeSpot.add(this.#getPlayerPositionOffset());
     }

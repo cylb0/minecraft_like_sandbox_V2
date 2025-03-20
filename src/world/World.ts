@@ -75,7 +75,7 @@ class World extends Group {
      * @param worldZ - World z-coordinate.
      * @returns A `Vector3` free position.
      */
-    findSPawnPosition(worldX: number, worldZ: number): Vector3 {
+    findSpawnPosition(worldX: number, worldZ: number): Vector3 {
         const chunk = this.#getOrCreateChunk(worldX, worldZ);
         const { localX, localZ } = this.#getLocalPosition(worldX, worldZ);
 
