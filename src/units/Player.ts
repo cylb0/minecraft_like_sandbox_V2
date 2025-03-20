@@ -1,3 +1,4 @@
+import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
 import { PLAYER_DIMENSIONS, PLAYER_SPAWN_POSITION } from "@/constants/player";
 import Camera from "@/core/scene/Camera";
 import IMovable from "@/interfaces/IMovable";
@@ -42,12 +43,31 @@ class Player extends Group implements IMovable {
         throw new Error("Method not implemented.");
     }
     /**
-     * Player's position is offset by half his height.
+     * Finds a safe spawn for the player.
+     *
+     * - Based on {x, z} world-coordinates, retrieve an empty.
+     * - Adds player offset.
+     * - Adds block Yoffset.
+     * 
+     * @returns The correct spawn position.
+     */
+    #findSpawn(): Vector3 {
+        const { x, z } = PLAYER_SPAWN_POSITION;
+        const freeSpot = this.#world.findSPawnPosition(x, z);
+
+        return freeSpot.add(this.#getPlayerPositionOffset());
+    }
+
+    /**
+     * Computes the player Y-offset needed to calculate actual position.
+     * 
+     * - Player's position is offset by half his height.
+     * - Also includes the block Offset as its position is centered.
      * 
      * @returns The player's position offset.
      */
     #getPlayerPositionOffset(): Vector3 {
-        return new Vector3(0, PLAYER_DIMENSIONS.height / 2, 0);
+        return new Vector3(0, (PLAYER_DIMENSIONS.height / 2) + (DEFAULT_BLOCK_SIZE / 2), 0);
     }
 
     /**

@@ -67,6 +67,56 @@ class World extends Group {
 
         this.updateChunksRendering();
     }
+    /**
+     * Retrieves a block to land on to based on world {x, z} coordinates.
+     * 
+     * @param worldX - World x-coordinate.
+     * @param worldZ - World z-coordinate.
+     * @returns A `Vector3` free position.
+     */
+    findSPawnPosition(worldX: number, worldZ: number): Vector3 {
+        const chunk = this.#getOrCreateChunk(worldX, worldZ);
+        const { localX, localZ } = this.#getLocalPosition(worldX, worldZ);
+
+        const hightestY = chunk.findHighestEmptyBlock(localX, localZ);
+
+        return new Vector3(worldX, hightestY, worldZ);
+    }
+
+    /**
+     * Transform world coordinates into local chunk coordinates.
+     * 
+     * @param worldX - World x-coordinate.
+     * @param worldZ - World z-coordinate.
+     * @returns Local coordinates within a chunk.
+     */
+    #getLocalPosition(worldX: number, worldZ: number): { localX: number, localZ: number } {
+        return { 
+            localX: worldX % this.config.size.chunkWidth,
+            localZ: worldZ % this.config.size.chunkWidth,
+        };
+    }
+
+    /**
+     * Retrieves an existing chunk by its position or generates a new one if missing.
+     * 
+     * @param worldX - World x-coordinate.
+     * @param worldZ - World z-coordinate.
+     */
+    #getOrCreateChunk(worldX: number, worldZ: number): Chunk {
+        const chunkX = Math.floor(worldX / this.config.size.chunkWidth);
+        const chunkZ = Math.floor(worldZ / this.config.size.chunkWidth);
+
+        const chunkKey = `${chunkX},${chunkZ}`;
+        let chunk = this.#bufferedChunks.get(chunkKey);
+
+        if (!chunk) {
+            chunk = this.#generateChunk(chunkX, chunkZ);
+            this.#bufferedChunks.set(chunkKey, chunk);
+        }
+
+        return chunk;
+    }
 
     /**
      * Renders all chunks within `renderRadius` distance.
