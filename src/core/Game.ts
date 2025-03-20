@@ -37,12 +37,12 @@ class Game {
      * - Uses `requestAnimationFrame` to create a smooth animation loop.
      */
     start(): void {
-        // const stats = new Stats();
-        // document.body.append(stats.dom);
+        const stats = new Stats();
+        document.body.append(stats.dom);
 
         const animate = () => {
             const canvas = Renderer.renderer.domElement;
-            // stats.update();
+            stats.update();
             const camera = Renderer.useOrbitCamera ? Camera.orbitCamera : Camera.playerCamera;
             // console.log(Renderer.renderer.info.render.triangles)
             this.#world.sunLight?.update();
