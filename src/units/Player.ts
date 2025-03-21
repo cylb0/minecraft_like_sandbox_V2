@@ -164,7 +164,7 @@ class Player extends Group implements IMovable {
      */
     #createPlayer(): Mesh {
         const playerGeometry = new BoxGeometry(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth);
-        const playerMaterial = new MeshBasicMaterial({ color: 0x0000ff });
+        const playerMaterial = new MeshBasicMaterial({ color: 0x0000ff, wireframe: true });
         return new Mesh(playerGeometry, playerMaterial);
     }
 
