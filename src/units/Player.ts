@@ -20,6 +20,8 @@ class Player extends Group implements IMovable {
     /** PointerLockControls used for FPS only. */
     #pointerLockControls?: PointerLockControls;
 
+    #keys: { [key: string]: boolean } = {};
+
     /** Locks pointer. */
     #onClickLock = () => {
         this.#pointerLockControls?.lock();
@@ -54,14 +56,19 @@ class Player extends Group implements IMovable {
         document.addEventListener("keyup", (event) => {
             if (event.code === "KeyK") this.toggleCamera();
         })
-    }
 
-    move(): void {
+        this.#initListeners();
         throw new Error("Method not implemented.");
     }
 
-    moveDirection(direction: Vector3, multiplier: number): void {
-        throw new Error("Method not implemented.");
+    /**
+     * Adds listeners for player inputs.
+     */
+    #initListeners() {
+        document.addEventListener('keydown', this.#onKeyDown.bind(this));
+        document.addEventListener('keyup', this.#onKeyUp.bind(this));
+    }
+
     }
 
     /**
@@ -143,16 +150,21 @@ class Player extends Group implements IMovable {
     }
 
     /**
-     * Creates and returns a `THREE.Mesh` representing the player.
-     *
-     * - Generates a box-shaped mesh using predefined dimensions.
-     *
-     * @returns A `THREE.Mesh` representing the player.
+     * Handles key press events by setting the corresponding key state to `true`.
+     * 
+     * @param event - The keyboard event containing the key code.
      */
-    #createPlayer(): Mesh {
-        const playerGeometry = new BoxGeometry(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth);
-        const playerMaterial = new MeshBasicMaterial({ color: 0x0000ff });
-        return new Mesh(playerGeometry, playerMaterial);
+    #onKeyDown(event: KeyboardEvent): void {
+        this.#keys[event.code] = true;
+    }
+
+    /**
+     * Handles key press events by setting the corresponding key state to `false`.
+     *
+     * @param event - The keyboard event containing the key code.
+     */
+    #onKeyUp(event: KeyboardEvent): void {
+        this.#keys[event.code] = false;
     }
 
     /**
