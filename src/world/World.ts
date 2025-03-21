@@ -77,7 +77,7 @@ class World extends Group {
      */
     findSpawnPosition(worldX: number, worldZ: number): Vector3 {
         const chunk = this.#getOrCreateChunk(worldX, worldZ);
-        const { localX, localZ } = this.#getLocalPosition(worldX, worldZ);
+        const { x: localX, z: localZ } = this.#getLocalPosition(worldX, 0, worldZ);
 
         const hightestY = chunk.findHighestEmptyBlock(localX, localZ);
 
@@ -88,13 +88,15 @@ class World extends Group {
      * Transform world coordinates into local chunk coordinates.
      * 
      * @param worldX - World x-coordinate.
+     * @param worldY - World y-coordinate.
      * @param worldZ - World z-coordinate.
      * @returns Local coordinates within a chunk.
      */
-    #getLocalPosition(worldX: number, worldZ: number): { localX: number, localZ: number } {
+    #getLocalPosition(worldX: number, worldY: number, worldZ: number): { x: number, y: number, z: number } {
         return { 
-            localX: worldX % this.config.size.chunkWidth,
-            localZ: worldZ % this.config.size.chunkWidth,
+            x: worldX % this.config.size.chunkWidth,
+            y: worldY % this.config.size.chunkDepth,
+            z: worldZ % this.config.size.chunkWidth,
         };
     }
 
