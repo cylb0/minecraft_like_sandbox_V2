@@ -16,7 +16,7 @@ class Game {
     #world: World;
 
     /** The player instance controlled by the user. */
-    #player?: Player;
+    #player: Player;
 
     /**
      * Creates a new game instance.
@@ -25,7 +25,7 @@ class Game {
      * @param world - The `World` instance containing chunks and terrain.
      * @param player - The `Player` instance controlled by the user.
      */
-    constructor(world: World, player?: Player) {
+    constructor(world: World, player: Player) {
         this.#world = world;
         this.#player = player;
     }
