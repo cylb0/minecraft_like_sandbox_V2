@@ -33,8 +33,7 @@ class Player extends Group implements IMovable {
         
         this.#model = this.#createPlayer();
         
-        const spawn = this.#findSpawn();
-        this.position.copy(spawn);
+        this.position.copy(this.#findSpawn());
 
         scene.add(this);
 
