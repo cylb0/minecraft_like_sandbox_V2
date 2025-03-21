@@ -40,7 +40,13 @@ class Game {
         const stats = new Stats();
         document.body.append(stats.dom);
 
+        let previousRenderTime = performance.now();
+
         const animate = () => {
+
+            const currentRenderTime = performance.now();
+            const delta = (currentRenderTime - previousRenderTime) / 1000;
+
             requestAnimationFrame(animate);
 
             this.#world.sunLight?.update();
@@ -48,6 +54,8 @@ class Game {
             
             Renderer.renderer.render(GameScene.scene, Camera.camera);
             stats.update();
+
+            previousRenderTime = currentRenderTime;
         }
         animate();
     }
