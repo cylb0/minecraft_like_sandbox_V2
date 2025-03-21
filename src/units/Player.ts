@@ -84,6 +84,23 @@ class Player extends Group implements IMovable {
         document.addEventListener('keyup', this.#onKeyUp.bind(this));
     }
 
+    /**
+     * Computes the forward direction based on the camera's orientation.
+     *
+     * @returns A normalized `THREE.Vector3` representing the forward direction.
+     */
+    #getForwardDirection(): Vector3 {
+        return this.#camera.getWorldDirection(new Vector3()).normalize();
+    }
+
+    /**
+     * Computes the right direction relative to the camera's orientation.
+     * It is calculated using the cross product of the camera's up vector and the forward direction
+     *
+     * @returns A normalized `THREE.Vector3` representing the rightward direction.
+     */
+    #getRightDirection(): Vector3 {
+        return new Vector3().crossVectors(this.#camera.up, this.#getForwardDirection()).normalize()
     }
 
     /**
