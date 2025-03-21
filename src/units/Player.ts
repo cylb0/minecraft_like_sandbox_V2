@@ -5,6 +5,7 @@ import IMovable from "@/interfaces/IMovable";
 import { CameraMode } from "@/types/Camera";
 import World from "@/world/World";
 import { BoxGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 
 /**
  * Represents the player.
@@ -16,11 +17,17 @@ class Player extends Group implements IMovable {
     #world: World;
     #model: Mesh;
 
+    /** PointerLockControls used for FPS only. */
+    #pointerLockControls?: PointerLockControls;
+
+    /** Locks pointer. */
+    #onClickLock = () => {
+        this.#pointerLockControls?.lock();
+    }
+
     /**
      * Creates a new `Player` instance.
      * 
-     * - Initializes movement, camera and event listeners.
-     *
      * @param scene - The `THREE.Scene` to render the player in.
      * @param camera - The `THREE.Camera` attached to the player.
      * @param world - The `World` instance managing chunks and blocks.
@@ -41,6 +48,12 @@ class Player extends Group implements IMovable {
         if (Camera.mode !== CameraMode.FPS) {
             this.add(this.#model);
         }
+        
+        this.#setupPointerLock();
+
+        document.addEventListener("keyup", (event) => {
+            if (event.code === "KeyK") this.toggleCamera();
+        })
     }
 
     move(): void {
@@ -49,6 +62,14 @@ class Player extends Group implements IMovable {
 
     moveDirection(direction: Vector3, multiplier: number): void {
         throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Toggles player's camera mode between FPS and TPS.
+     */
+    toggleCamera(): void {
+        const mode = Camera.mode === CameraMode.FPS ? CameraMode.TPS : CameraMode.FPS;
+        this.#switchCamera(mode);
     }
 
     /**
@@ -72,6 +93,18 @@ class Player extends Group implements IMovable {
             this.#camera.lookAt(this.position);
         }
     }
+
+    /**
+     * Disconnects pointer lock controls and removes associated event from document.
+     */
+    #disposePointerLock(): void {
+        if (this.#pointerLockControls) {
+            this.#pointerLockControls.disconnect();
+        }
+
+        document.removeEventListener("click", this.#onClickLock)
+    }
+
     /**
      * Removes player model from the Group if it is included.
      */
@@ -121,6 +154,21 @@ class Player extends Group implements IMovable {
         const playerMaterial = new MeshBasicMaterial({ color: 0x0000ff });
         return new Mesh(playerGeometry, playerMaterial);
     }
+
+    /**
+     * Sets up pointer lock controls for FPS mouse tracking.
+     * Attaches a click listener to the document to lock pointer.
+     */
+    #setupPointerLock(): void {
+        if (!this.#pointerLockControls) {
+            this.#pointerLockControls = new PointerLockControls(this.#camera, document.body);
+        }
+
+        this.#pointerLockControls.connect();
+
+        document.addEventListener("click", this.#onClickLock)
+    }
+
     /**
      * Adds player model to the Group if it is not already included.
      */
@@ -130,6 +178,26 @@ class Player extends Group implements IMovable {
         }
     }
 
+    /**
+     * Switches camera to a given `CameraMode`.
+     * - Toggles player model visibility accordingly.
+     */
+    #switchCamera(mode: CameraMode): void {
+        Camera.switchCamera(mode);
+
+        if (mode === CameraMode.FPS) {
+            this.#hideModel();
+            this.#setupPointerLock();
+            this.#pointerLockControls?.lock();
+        } else if (mode === CameraMode.TPS) {
+            this.#showModel();
+            this.#setupPointerLock();
+            this.#pointerLockControls?.lock();
+        } else {
+            this.#disposePointerLock();
+        }
+        this.#attachCamera();
+    }
 }
 
 export default Player;
