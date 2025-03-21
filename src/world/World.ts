@@ -6,6 +6,7 @@ import Clock from "@/helpers/Clock";
 import SunLight from "@/world/lights/SunLight";
 import MoonLight from "@/world/lights/MoonLight";
 import AstralLight from "@/world/lights/AstralLight";
+import { Block } from "@/types/Blocks";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
@@ -41,6 +42,41 @@ class World extends Group {
     }
 
     /**
+     * Setups lighting on the scene.
+     * 
+     * - Creates indirect lighting, making everything uniformly lit.
+     * - Creates sunlight coming from a specific direction.
+     */
+    addLighting() {
+        this.#setupAmbientLight();
+        this.#setupSunLight(false);
+        this.#setupMoonLight(false);
+    }
+
+    /**
+     * Disposes of and removes all chunks within the world.
+     * It iterates through the world's children and dispose of any `Chunk` instance.
+     * It also removes lights and reinitializes `sunLight`.
+     */
+    dispose() {
+        this.#bufferedChunks.forEach((chunk) => {
+            chunk.dispose();
+            this.remove(chunk);
+        });
+        this.#bufferedChunks.clear();
+
+        this.children.forEach((child) => {
+            if (child instanceof AstralLight || child instanceof AmbientLight) {
+                child.dispose();
+                this.remove(child);
+            }
+        })
+
+        this.moonLight = null;
+        this.sunLight = null;
+    }
+
+    /**
      * Generates the world by creating and adding chunks within a render radius.
      * 
      * - Generates chunks within `renderRadius + 1` because chunks will need access to outer chunk data for occlusion rendering.
@@ -69,6 +105,32 @@ class World extends Group {
     }
 
     /**
+     * Retrieves a Block from its world coordinates.
+     * 
+     * - Find the coordinates of the chunk this block belongs to.
+     * - Retrieves the chunk or generate it if needed.
+     * - Returns the correct block within this chunk.
+     * 
+     * @param worldX - World x-coordinate.
+     * @param worldY - World y-coordinate.
+     * @param worldZ - World z-coordinate.
+     * @returns 
+     */
+    getBlock(worldX: number, worldY: number, worldZ: number): Block | null {
+        const { x: chunkX, z: chunkZ } = this.#getChunkPosition(worldX, worldZ);
+
+        const chunkKey = `${chunkX},${chunkZ}`;
+        let chunk = this.#bufferedChunks.get(chunkKey);
+
+        if (!chunk) {
+            chunk = this.#generateChunk(chunkX, chunkZ);
+            this.#bufferedChunks.set(chunkKey, chunk);
+        }
+
+        return chunk.getBlock(worldX, worldY, worldZ);
+    }
+
+    /**
      * Retrieves a block to land on to based on world {x, z} coordinates.
      * 
      * @param worldX - World x-coordinate.
@@ -82,55 +144,6 @@ class World extends Group {
         const hightestY = chunk.findHighestEmptyBlock(localX, localZ);
 
         return new Vector3(worldX, hightestY, worldZ);
-    }
-
-    /**
-     * Transform world coordinates into local chunk coordinates.
-     * 
-     * @param worldX - World x-coordinate.
-     * @param worldY - World y-coordinate.
-     * @param worldZ - World z-coordinate.
-     * @returns Local coordinates within a chunk.
-     */
-    #getLocalPosition(worldX: number, worldY: number, worldZ: number): { x: number, y: number, z: number } {
-        return { 
-            x: worldX % this.config.size.chunkWidth,
-            y: worldY % this.config.size.chunkDepth,
-            z: worldZ % this.config.size.chunkWidth,
-        };
-    }
-
-    /**
-     * Retrieves an existing chunk by its position or generates a new one if missing.
-     * 
-     * @param worldX - World x-coordinate.
-     * @param worldZ - World z-coordinate.
-     */
-    #getOrCreateChunk(worldX: number, worldZ: number): Chunk {
-        const { x: chunkX, z: chunkZ } = this.#getChunkPosition(worldX, worldZ);
-
-        const chunkKey = `${chunkX},${chunkZ}`;
-        let chunk = this.#bufferedChunks.get(chunkKey);
-
-        if (!chunk) {
-            chunk = this.#generateChunk(chunkX, chunkZ);
-            this.#bufferedChunks.set(chunkKey, chunk);
-        }
-
-        return chunk;
-    }
-    /**
-     * Retrieves chunk coordinates based on global worldX and worldZ coordinates.
-     * 
-     * @param worldX - World x-coordinate.
-     * @param worldZ - World z-coordinate.
-     * @returns An object containing chunk's coordinates in world grid.
-     */
-    #getChunkPosition(worldX: number, worldZ: number): { x: number, z: number } {
-        return {
-            x: Math.floor(worldX / this.config.size.chunkWidth),
-            z: Math.floor(worldZ / this.config.size.chunkWidth),
-        };
     }
 
     /**
@@ -155,15 +168,53 @@ class World extends Group {
     }
 
     /**
-     * Setups lighting on the scene.
+     * Retrieves chunk coordinates based on global worldX and worldZ coordinates.
      * 
-     * - Creates indirect lighting, making everything uniformly lit.
-     * - Creates sunlight coming from a specific direction.
+     * @param worldX - World x-coordinate.
+     * @param worldZ - World z-coordinate.
+     * @returns An object containing chunk's coordinates in world grid.
      */
-    addLighting() {
-        this.#setupAmbientLight();
-        this.#setupSunLight(false);
-        this.#setupMoonLight(false);
+    #getChunkPosition(worldX: number, worldZ: number): { x: number, z: number } {
+        return {
+            x: Math.floor(worldX / this.config.size.chunkWidth),
+            z: Math.floor(worldZ / this.config.size.chunkWidth),
+        };
+    }
+
+    /**
+     * Retrieves an existing chunk by its position or generates a new one if missing.
+     * 
+     * @param worldX - World x-coordinate.
+     * @param worldZ - World z-coordinate.
+     */
+    #getOrCreateChunk(worldX: number, worldZ: number): Chunk {
+        const { x: chunkX, z: chunkZ } = this.#getChunkPosition(worldX, worldZ);
+
+        const chunkKey = `${chunkX},${chunkZ}`;
+        let chunk = this.#bufferedChunks.get(chunkKey);
+
+        if (!chunk) {
+            chunk = this.#generateChunk(chunkX, chunkZ);
+            this.#bufferedChunks.set(chunkKey, chunk);
+        }
+
+        return chunk;
+    }
+
+    /**
+     * Transform world coordinates into local chunk coordinates.
+     * 
+     * @param worldX - World x-coordinate.
+     * @param worldY - World y-coordinate.
+     * @param worldZ - World z-coordinate.
+     * @returns Local coordinates within a chunk.
+     */
+    #getLocalPosition(worldX: number, worldY: number, worldZ: number): { x: number, y: number, z: number } {
+        return { 
+            x: worldX % this.config.size.chunkWidth,
+            y: worldY % this.config.size.chunkDepth,
+            z: worldZ % this.config.size.chunkWidth,
+        };
     }
 
     /**
@@ -223,29 +274,6 @@ class World extends Group {
             helper
         );
         this.add(this.moonLight);
-    }
-
-    /**
-     * Disposes of and removes all chunks within the world.
-     * It iterates through the world's children and dispose of any `Chunk` instance.
-     * It also removes lights and reinitializes `sunLight`.
-     */
-    dispose() {
-        this.#bufferedChunks.forEach((chunk) => {
-            chunk.dispose();
-            this.remove(chunk);
-        });
-        this.#bufferedChunks.clear();
-
-        this.children.forEach((child) => {
-            if (child instanceof AstralLight || child instanceof AmbientLight) {
-                child.dispose();
-                this.remove(child);
-            }
-        })
-
-        this.moonLight = null;
-        this.sunLight = null;
     }
 }
 
