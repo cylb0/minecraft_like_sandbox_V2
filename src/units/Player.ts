@@ -22,6 +22,8 @@ class Player extends Group implements IMovable {
 
     #keys: { [key: string]: boolean } = {};
 
+    baseSpeed: number = 5;
+
     /** Locks pointer. */
     #onClickLock = () => {
         this.#pointerLockControls?.lock();
@@ -58,6 +60,19 @@ class Player extends Group implements IMovable {
         })
 
         this.#initListeners();
+    }
+
+    /**
+     * Moves the player.
+     * 
+     * - Handle key inputs.
+     * 
+     * @param delta - The elapsed time since last render (in ms).
+     */
+    move(delta: number): void {
+    }
+
+    jump(): void {
         throw new Error("Method not implemented.");
     }
 
