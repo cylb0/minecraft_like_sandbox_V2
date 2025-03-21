@@ -21,7 +21,7 @@ class Camera {
     );
 
     /** The current camera mode. */
-    static #mode: CameraMode = CameraMode.TPS;
+    static #mode: CameraMode = CameraMode.FPS;
 
     /** Stores OrbitControls for `CameraMode.ORBIT` mode. */
     static #controls: OrbitControls | null = null;
