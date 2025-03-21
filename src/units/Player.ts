@@ -14,6 +14,7 @@ class Player extends Group implements IMovable {
     #camera: PerspectiveCamera;
     #scene: Scene;
     #world: World;
+    #model: Mesh;
 
     /**
      * Creates a new `Player` instance.
@@ -30,8 +31,7 @@ class Player extends Group implements IMovable {
         this.#scene = scene;
         this.#world = world;
         
-        const playerModel = this.#createPlayer();
-        this.add(playerModel);
+        this.#model = this.#createPlayer();
         
         const spawn = this.#findSpawn();
         this.position.copy(spawn);
@@ -39,6 +39,9 @@ class Player extends Group implements IMovable {
         scene.add(this);
 
         this.#attachCamera();
+        if (Camera.mode !== CameraMode.FPS) {
+            this.add(this.#model);
+        }
     }
 
     move(): void {
@@ -68,6 +71,14 @@ class Player extends Group implements IMovable {
             const offset = Camera.tpsOffset;
             this.#camera.position.set(offset.x, offset.y, offset.z);
             this.#camera.lookAt(this.position);
+        }
+    }
+    /**
+     * Removes player model from the Group if it is included.
+     */
+    #hideModel(): void {
+        if (this.children.includes(this.#model)) {
+            this.remove(this.#model);
         }
     }
 
@@ -111,6 +122,15 @@ class Player extends Group implements IMovable {
         const playerMaterial = new MeshBasicMaterial({ color: 0x0000ff });
         return new Mesh(playerGeometry, playerMaterial);
     }
+    /**
+     * Adds player model to the Group if it is not already included.
+     */
+    #showModel(): void {
+        if (!this.children.includes(this.#model)) {
+            this.add(this.#model);
+        }
+    }
+
 }
 
 export default Player;
