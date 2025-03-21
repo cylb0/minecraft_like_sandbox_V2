@@ -70,37 +70,19 @@ class Player extends Group implements IMovable {
      * @param delta - The elapsed time since last render (in ms).
      */
     move(delta: number): void {
+        const direction = this.#computeMovementDirection();
+
+        if (direction.lengthSq() > 0) {
+            direction
+                .normalize()
+                .multiplyScalar(this.baseSpeed * delta);
+
+            this.position.add(direction);
+        }
     }
 
     jump(): void {
         throw new Error("Method not implemented.");
-    }
-
-    /**
-     * Adds listeners for player inputs.
-     */
-    #initListeners() {
-        document.addEventListener('keydown', this.#onKeyDown.bind(this));
-        document.addEventListener('keyup', this.#onKeyUp.bind(this));
-    }
-
-    /**
-     * Computes the forward direction based on the camera's orientation.
-     *
-     * @returns A normalized `THREE.Vector3` representing the forward direction.
-     */
-    #getForwardDirection(): Vector3 {
-        return this.#camera.getWorldDirection(new Vector3()).normalize();
-    }
-
-    /**
-     * Computes the right direction relative to the camera's orientation.
-     * It is calculated using the cross product of the camera's up vector and the forward direction
-     *
-     * @returns A normalized `THREE.Vector3` representing the rightward direction.
-     */
-    #getRightDirection(): Vector3 {
-        return new Vector3().crossVectors(this.#camera.up, this.#getForwardDirection()).normalize()
     }
 
     /**
@@ -117,7 +99,7 @@ class Player extends Group implements IMovable {
      * - Moves camera's position to the player's head if FPS mode.
      * - Offsets camera's position if TPS mode.
      */
-    #attachCamera() {
+    #attachCamera(): void {
         if (!this.children.includes(this.#camera)) {
             this.add(this.#camera);
         }
@@ -131,6 +113,42 @@ class Player extends Group implements IMovable {
             this.#camera.position.set(offset.x, offset.y, offset.z);
             this.#camera.lookAt(this.position);
         }
+    }
+
+    /**
+     * Computes the combined movement based on keyboard inputs.
+     *
+     * - Uses the camera's forward and right vectors flattend on (x, z) axes.
+     * - Adds forward / right based on inputs.
+     * 
+     * @returns The final movement direction vector. 
+     */
+    #computeMovementDirection(): Vector3 {
+        const forward = this.#getForwardDirection();
+        forward.y = 0;
+        const right = this.#getRightDirection();
+
+        const move = new Vector3();
+
+        if (this.#keys['KeyW']) move.add(forward);
+        if (this.#keys['KeyS']) move.sub(forward);
+        if (this.#keys['KeyA']) move.add(right);
+        if (this.#keys['KeyD']) move.sub(right);
+
+        return move;
+    }
+
+    /**
+     * Creates and returns a `THREE.Mesh` representing the player.
+     *
+     * - Generates a box-shaped mesh using predefined dimensions.
+     *
+     * @returns A `THREE.Mesh` representing the player.
+     */
+    #createPlayer(): Mesh {
+        const playerGeometry = new BoxGeometry(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth);
+        const playerMaterial = new MeshBasicMaterial({ color: 0x0000ff });
+        return new Mesh(playerGeometry, playerMaterial);
     }
 
     /**
@@ -151,6 +169,37 @@ class Player extends Group implements IMovable {
         if (this.children.includes(this.#model)) {
             this.remove(this.#model);
         }
+    }
+
+    /**
+     * Adds listeners for player inputs.
+     */
+    #initListeners(): void {
+        document.addEventListener('keydown', this.#onKeyDown.bind(this));
+        document.addEventListener('keyup', this.#onKeyUp.bind(this));
+    }
+
+    /**
+     * Computes the forward direction based on the camera's orientation.
+     *
+     * @returns A normalized `THREE.Vector3` representing the forward direction.
+     */
+    #getForwardDirection(): Vector3 {
+        return this.#camera
+            .getWorldDirection(new Vector3())
+            .normalize();
+    }
+
+    /**
+     * Computes the right direction relative to the camera's orientation.
+     * It is calculated using the cross product of the camera's up vector and the forward direction
+     *
+     * @returns A normalized `THREE.Vector3` representing the rightward direction.
+     */
+    #getRightDirection(): Vector3 {
+        return new Vector3()
+            .crossVectors(this.#camera.up, this.#getForwardDirection())
+            .normalize();
     }
 
     /**

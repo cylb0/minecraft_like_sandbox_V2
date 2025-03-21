@@ -49,6 +49,8 @@ class Game {
 
             requestAnimationFrame(animate);
 
+            this.#player.move(delta);
+
             this.#world.sunLight?.update();
             this.#world.moonLight?.update();
             
