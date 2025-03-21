@@ -7,6 +7,7 @@ import SunLight from "@/world/lights/SunLight";
 import MoonLight from "@/world/lights/MoonLight";
 import AstralLight from "@/world/lights/AstralLight";
 import { Block } from "@/types/Blocks";
+import { modulo } from "@/helpers/MathUtils";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
@@ -127,7 +128,9 @@ class World extends Group {
             this.#bufferedChunks.set(chunkKey, chunk);
         }
 
-        return chunk.getBlock(worldX, worldY, worldZ);
+        const { x: localX, y: localY, z: localZ } = this.#getLocalPosition(worldX, worldY, worldZ);
+
+        return chunk.getBlock(localX, localY, localZ);
     }
 
     /**
@@ -211,9 +214,9 @@ class World extends Group {
      */
     #getLocalPosition(worldX: number, worldY: number, worldZ: number): { x: number, y: number, z: number } {
         return { 
-            x: worldX % this.config.size.chunkWidth,
-            y: worldY % this.config.size.chunkDepth,
-            z: worldZ % this.config.size.chunkWidth,
+            x: modulo(worldX, this.config.size.chunkWidth),
+            y: modulo(worldY, this.config.size.chunkDepth),
+            z: modulo(worldZ, this.config.size.chunkWidth),
         };
     }
 

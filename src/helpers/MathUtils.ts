@@ -38,3 +38,10 @@ export function computeVariationProgress(value: number, from: number, to: number
 
     return progress;
 }
+
+/**
+ * Modulo function that works as intended with negative values.
+ */
+export function modulo(n: number, size: number): number {
+    return ((n % size) + size) % size;
+}
