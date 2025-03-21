@@ -107,8 +107,7 @@ class World extends Group {
      * @param worldZ - World z-coordinate.
      */
     #getOrCreateChunk(worldX: number, worldZ: number): Chunk {
-        const chunkX = Math.floor(worldX / this.config.size.chunkWidth);
-        const chunkZ = Math.floor(worldZ / this.config.size.chunkWidth);
+        const { x: chunkX, z: chunkZ } = this.#getChunkPosition(worldX, worldZ);
 
         const chunkKey = `${chunkX},${chunkZ}`;
         let chunk = this.#bufferedChunks.get(chunkKey);
@@ -119,6 +118,19 @@ class World extends Group {
         }
 
         return chunk;
+    }
+    /**
+     * Retrieves chunk coordinates based on global worldX and worldZ coordinates.
+     * 
+     * @param worldX - World x-coordinate.
+     * @param worldZ - World z-coordinate.
+     * @returns An object containing chunk's coordinates in world grid.
+     */
+    #getChunkPosition(worldX: number, worldZ: number): { x: number, z: number } {
+        return {
+            x: Math.floor(worldX / this.config.size.chunkWidth),
+            z: Math.floor(worldZ / this.config.size.chunkWidth),
+        };
     }
 
     /**
