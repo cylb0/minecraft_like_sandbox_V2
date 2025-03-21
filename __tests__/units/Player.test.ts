@@ -2,6 +2,8 @@ jest.mock("three", () => ({
     ...jest.requireActual("three"),
     WebGLRenderer: require("../../__mocks__/three/WebGLRenderer").default,
 }));
+jest.mock("three/examples/jsm/math/SimplexNoise");
+jest.mock("three/examples/jsm/controls/PointerLockControls");
 jest.mock("@/world/World");
 
 import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
@@ -11,8 +13,6 @@ import { CameraMode } from "@/types/Camera";
 import Player from "@/units/Player";
 import World from "@/world/World";
 import { BoxGeometry, Mesh, PerspectiveCamera, Scene } from "three";
-
-jest.mock("three/examples/jsm/math/SimplexNoise");
 
 describe("Player class", () => {
     let camera: PerspectiveCamera;
@@ -25,13 +25,32 @@ describe("Player class", () => {
         scene = new Scene();
         camera = new PerspectiveCamera();
         world = new World(seed);
-        console.log(world)
         player = new Player(scene, camera, world);
     });
 
     it("should create a player object and add it to the scene", () => {
         expect(scene.children).toContain(player);
     });
+
+    it("should create a player model", () => {
+        expect(player.model).toBeDefined();
+    });
+
+    it("should NOT add the player model to the scene when Camera.mode is FPS", () => {
+        Object.defineProperty(Camera, "mode", { get: () => CameraMode.FPS });
+        player = new Player(scene, camera, world);
+
+        const hasMesh = player.children.some(child => child instanceof Mesh);
+        expect(hasMesh).toBe(false);
+    });
+
+    it("should add the player model to the scene when Camera.mode is TPS", () => {
+        Object.defineProperty(Camera, "mode", { get: () => CameraMode.TPS });
+        player = new Player(scene, camera, world);
+
+        const hasMesh = player.children.some(child => child instanceof Mesh);
+        expect(hasMesh).toBe(true);
+    })
 
     it("should create a player mesh with correct dimension", () => {
         const mesh = player.children.find(child => child instanceof Mesh);
@@ -70,4 +89,27 @@ describe("Player class", () => {
         player = new Player(scene, camera, world);
         expect(camera.position).toEqual(Camera.tpsOffset);
     });
+
+    it("should toggle camera mode and show / hide models", () => {
+        Object.defineProperty(Camera, "mode", { get: () => CameraMode.FPS });
+        player = new Player(scene, camera, world);
+        
+        const hasMeshBefore = player.children.some(child => child instanceof Mesh);
+        expect(hasMeshBefore).toBe(false);
+
+        player.toggleCamera();
+        const hasMeshAfter = player.children.some(child => child instanceof Mesh);
+        expect(hasMeshAfter).toBe(true);
+    });
+
+    it("should move the player when a movement key is pressed", () => {
+        const startingPosition = player.position.clone();
+
+        (player as any).pressKey("KeyW");
+        player.move(1);
+
+        const moved = !player.position.equals(startingPosition);
+        expect(moved).toBe(true);
+    });
+
 });

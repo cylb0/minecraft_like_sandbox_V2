@@ -29,6 +29,10 @@ class Player extends Group implements IMovable {
         this.#pointerLockControls?.lock();
     }
 
+    /** __tests__ ONLY */
+    pressKey?(code: string): void;
+    releaseKey?(code: string): void;
+
     /**
      * Creates a new `Player` instance.
      * 
@@ -60,6 +64,19 @@ class Player extends Group implements IMovable {
         })
 
         this.#initListeners();
+
+        if (process.env.NODE_ENV === "test") {
+            this.pressKey = (code: string) => {
+                this.#keys[code] = true;
+            };
+            this.releaseKey = (code: string) => {
+                this.#keys[code] = false;
+            }
+        }
+    }
+
+    get model(): Mesh {
+        return this.#model;
     }
 
     /**
