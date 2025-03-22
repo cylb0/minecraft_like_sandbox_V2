@@ -4,7 +4,7 @@ import Camera from "@/core/scene/Camera";
 import IMovable from "@/interfaces/IMovable";
 import { CameraMode } from "@/types/Camera";
 import World from "@/world/World";
-import { BoxGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
+import { Box3, BoxGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 
 /**
@@ -100,6 +100,22 @@ class Player extends Group implements IMovable {
 
     jump(): void {
         throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Computes and returns an **axis-aligned bounding box** for the player.
+     * 
+     * - Overrides `getBoundingBox()` from `Collidable`.
+     * - Ignores player's rotation to prevent weird collision behavior.
+     * 
+     * @returns The current axis-aligned bounding box of the object.
+     */
+    get boundingBox(): Box3 {
+        const currentPosition = this.position.clone();
+        return new Box3().setFromCenterAndSize(
+            currentPosition,
+            new Vector3(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth)
+        );
     }
 
     /**
