@@ -45,3 +45,15 @@ export function computeVariationProgress(value: number, from: number, to: number
 export function modulo(n: number, size: number): number {
     return ((n % size) + size) % size;
 }
+
+/**
+ * Returns the mathematical signe of a number, defaults to `1` when value is 0.
+ * 
+ * - Used for physics calculation as it always return a direction even for aligned centers.
+ * 
+ * @param n - The number to test sign of.
+ * @returns `1` if input is `0`, otherwise `Math.sign(n)`.
+ */
+export function epsilonSign(n: number): number {
+    return (n === 0 ? 1 : Math.sign(n));
+}
