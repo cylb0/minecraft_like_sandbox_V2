@@ -5,6 +5,8 @@ import { Vector3 } from "three";
  */
 interface IMovable {
     baseSpeed: number;
+    isGrounded: boolean;
+    readonly velocity: Vector3;
 
     /**
      * Updates movement based on user inputs or AI logic.

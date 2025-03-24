@@ -17,12 +17,15 @@ class Player extends Group implements IMovable {
     #world: World;
     #model: Mesh;
 
+
     /** PointerLockControls used for FPS only. */
     #pointerLockControls?: PointerLockControls;
 
     #keys: { [key: string]: boolean } = {};
 
     baseSpeed: number = 5;
+    #isGrounded = false;
+    #velocity: Vector3 = new Vector3();
 
     /** Locks pointer. */
     #onClickLock = () => {
@@ -75,8 +78,20 @@ class Player extends Group implements IMovable {
         }
     }
 
+    get isGrounded(): boolean {
+        return this.#isGrounded;
+    }
+
+    setIsGrounded(isGrounded: boolean): void {
+        this.#isGrounded = isGrounded;
+    }
+
     get model(): Mesh {
         return this.#model;
+    }
+
+    get velocity(): Vector3 {
+        return this.#velocity;
     }
 
     /**
@@ -90,11 +105,11 @@ class Player extends Group implements IMovable {
         const direction = this.#computeMovementDirection();
 
         if (direction.lengthSq() > 0) {
-            direction
-                .normalize()
-                .multiplyScalar(this.baseSpeed * delta);
+            direction.normalize().multiplyScalar(this.baseSpeed);
+            this.velocity.x = direction.x;
+            this.velocity.z = direction.z;
 
-            this.position.add(direction);
+            this.position.add(this.velocity.clone().multiplyScalar(delta));
         }
     }
 
