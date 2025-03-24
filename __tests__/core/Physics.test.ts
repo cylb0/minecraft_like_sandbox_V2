@@ -16,7 +16,7 @@ describe("Physics", () => {
     describe("getBlockBoundingBox", () => {
         it("should return a Box3 with correct settings", () => {
             const position = new Vector3(1, 2, 3);
-            const box = physics.getBlockBoundingBox(position);
+            const box = physics.getBlockBoundingBox(1, 2, 3);
     
             expect(box.getCenter(new Vector3())).toEqual(position);
             expect(box.getSize(new Vector3())).toEqual(new Vector3(DEFAULT_BLOCK_SIZE, DEFAULT_BLOCK_SIZE, DEFAULT_BLOCK_SIZE));
