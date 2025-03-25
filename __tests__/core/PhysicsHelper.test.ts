@@ -1,7 +1,8 @@
 jest.unmock("three");
 
 import { DEFAULT_BLOCK_SIZE } from "@/constants/block"
-import { getBlockBoundingBox, getBlockRange } from "@/helpers/PhysicsHelper";
+import { getBlockBoundingBox, getBlockRange, sortCollisionsByOverlap } from "@/helpers/PhysicsHelper";
+import Player from "@/units/Player";
 import { Box3, Vector3 } from "three";
 
 describe("PhysicsHelper", () => {
@@ -43,6 +44,71 @@ describe("PhysicsHelper", () => {
                 minZ: -4,
                 maxZ: 4,
             });
+        });
+    });
+
+    describe("sortCollisionsByOverlap", () => {
+        const boxMock = new Box3(
+            new Vector3(-.5, -1, -.5),
+            new Vector3(.5, 1, .5) 
+        );
+
+        const playerMock = {
+            position: new Vector3(0, 0, 0),
+            get boundingBox() {
+                return boxMock;
+            },
+        } as Player;
+
+        it("should sort collisions correctly from smallest to largest overlap", () => {
+            const smallOverlapCollision = new Box3(
+                new Vector3(-.1, -.1, -.1),
+                new Vector3(.1, .1, .1)
+            );
+
+            const mediumOverlapCollision = new Box3(
+                new Vector3(-.2, -.2, -.2),
+                new Vector3(.2, .2, .2)
+            );
+
+            const largeOverlapCollision = new Box3(
+                new Vector3(-.4, -.5, -.4),
+                new Vector3(.4, .4, .4)
+            );
+
+            const sortedCollisions = sortCollisionsByOverlap(playerMock, [
+                largeOverlapCollision,
+                mediumOverlapCollision,
+                smallOverlapCollision,
+            ]);
+
+            expect(sortedCollisions).toEqual([
+                smallOverlapCollision,
+                mediumOverlapCollision,
+                largeOverlapCollision
+            ]);
+        });
+
+        it("should handle equal collisions correctly", () => {
+            const mediumOverlapCollision1 = new Box3(
+                new Vector3(-.2, -.2, -.2),
+                new Vector3(.2, .2, .2)
+            );
+
+            const mediumOverlapCollision2 = new Box3(
+                new Vector3(-.2, -.2, -.2),
+                new Vector3(.2, .2, .2)
+            );
+
+            const sortedCollisions = sortCollisionsByOverlap(playerMock, [
+                mediumOverlapCollision2,
+                mediumOverlapCollision1
+            ]);
+
+            expect(sortedCollisions).toEqual([
+                mediumOverlapCollision2,
+                mediumOverlapCollision1
+            ]);
         });
     });
 })
