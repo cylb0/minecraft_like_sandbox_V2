@@ -21,10 +21,13 @@ class Camera {
     );
 
     /** The current camera mode. */
-    static #mode: CameraMode = CameraMode.PLAYER;
+    static #mode: CameraMode = CameraMode.FPS;
 
     /** Stores OrbitControls for `CameraMode.ORBIT` mode. */
     static #controls: OrbitControls | null = null;
+
+    /** Offset for TPS mode. */
+    static #tpsOffset: Vector3 = new Vector3(0, 1.5, 1);
 
     /**
      * @returns The singleton `THREE.PerspectiveCamera` instance.
@@ -33,30 +36,39 @@ class Camera {
         return this.#camera;
     }
 
+    /**
+     * @returns The active camera mode.
+     */
     static get mode(): CameraMode {
         return this.#mode;
     }
 
+    /**
+     * @returns the active `OrbitControls` instance or `null` if disabled.
+     */
     static get controls(): OrbitControls | null {
         return this.#controls;
+    }
+
+    /**
+     * @returns the TPS offset.
+     */
+    static get tpsOffset(): Vector3 {
+        return this.#tpsOffset;
     }
 
     /**
      * Switches between camera modes.
      * 
      * @param mode - The `Camera` mode to switch to.
-     * @param position - The new `Vector3` position of the camera.
      */
-    static switchCamera(mode: CameraMode, position: Vector3) {
-        if (this.#mode === mode) return;
-
+    static switchCamera(mode: CameraMode) {
         this.#mode = mode;
 
         if (mode === CameraMode.ORBIT) {
-            this.#addOrbitControls(position);
+            this.#addOrbitControls();
         } else {
             this.#removeOrbitControls();
-            this.#camera.position.copy(position);
         }
     }
 
@@ -68,17 +80,11 @@ class Camera {
 
     /**
      * Adds `THREE.OrbitControls` to the camera enabling mouse-based rotation around the scene.
-     * 
-     * - Creates a new OrbitControls object.
-     * - Updates the camera's position.
-     * - Force camera to look at origin.
-     * 
-     * @param position - The `THREE.Vector3` new position of the camera.
      */
-    static #addOrbitControls(position: Vector3): void {
+    static #addOrbitControls(): void {
         this.#controls = new OrbitControls(this.#camera, Renderer.renderer.domElement);
-        this.#camera.position.copy(position);
         this.#controls.target.set(0, DEFAULT_CHUNK_DIMENSIONS.depth / 2, 0);
+        this.#controls.enableZoom = true;
         this.#controls.update();
     }
 

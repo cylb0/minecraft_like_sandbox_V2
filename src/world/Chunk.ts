@@ -57,7 +57,9 @@ class Chunk extends Group {
         this.#generateWater();
     }
 
-    /** Renders a chunk. */
+    /**
+     * Renders a chunk.
+    */
     render() {
         this.#generateMeshes();
     }
@@ -171,7 +173,7 @@ class Chunk extends Group {
     #generateSurface(): void {
         for (let x = 0; x < this.#config.size.chunkWidth; x++) {
             for (let z = 0; z < this.#config.size.chunkWidth; z++) {
-                let highestBlockY = this.#findHighestEmptyBlock(x, z);
+                let highestBlockY = this.findHighestEmptyBlock(x, z);
 
                 // Can only replace 2 blocks over bedrock.
                 if (highestBlockY > 2) {
@@ -200,7 +202,7 @@ class Chunk extends Group {
     #generateWater(): void {
         for (let x = 0; x < this.#config.size.chunkWidth; x++) {
             for (let z = 0; z < this.#config.size.chunkWidth; z++) {
-                let highestBlockY = this.#findHighestEmptyBlock(x, z);
+                let highestBlockY = this.findHighestEmptyBlock(x, z);
 
                 for (let y = highestBlockY; y <= this.#config.water.seaLevel; y++) {
                     this.setBlockType(x, y, z, BlockType.Water);
@@ -216,7 +218,7 @@ class Chunk extends Group {
      * @param z z-coordinate of the core.
      * @returns the y-coordinate of the highest empty block found.
      */
-    #findHighestEmptyBlock(x: number, z: number): number {
+    findHighestEmptyBlock(x: number, z: number): number {
         let highestBlockY = 0;
         for (let y = this.#config.size.chunkDepth - 1; y >= 0; y--) {
             if (this.getBlock(x, y, z)?.blockType !== BlockType.Empty) {

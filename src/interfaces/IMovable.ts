@@ -4,18 +4,32 @@ import { Vector3 } from "three";
  * Defines movement behavior for movable entities;
  */
 interface IMovable {
-    /**
-     * Updates movement based on user inputs or AI logic.
-     */
-    move(): void;
+    /** The base movement speed for the entity. */
+    baseSpeed: number;
+    
+    /** Wether or not the entity is standing on the floor. */
+    isGrounded: boolean;
+
+    /** Direction of the movement based on inputs (or AI?). */
+    readonly movementDirection: Vector3;
 
     /**
-     * Moves the entity in a given direction
+     * Actual velocity of the entity.
      * 
-     * @param direction - The normalized direction vector (movement axis relative the entity).
-     * @param multiplier - Multiplier to determine speed and direction (negative value for reverse movement).
+     * - Includes vertical velocity for gravity and jumps.
      */
-    moveDirection(direction: Vector3, multiplier: number): void;
+    readonly velocity: Vector3;
+
+    /**
+     * Updates movement based on user inputs or AI logic.
+     * @param delta - The elapsed time since last
+     */
+    move(delta: number): void;
+
+    /**
+     * Handles jump.
+     */
+    jump(): void;
 }
 
 export default IMovable;

@@ -4,11 +4,9 @@ import Scene from "@/core/scene/GameScene";
 import World from "@/world/World";
 import Player from "./units/Player";
 import GameHelper from "@/helpers/GameHelper";
-import Renderer from "@/core/scene/Renderer";
 import UI from "./helpers/Ui";
-import { Vector3 } from "three";
 import { preloadTextures } from "@/blocks/textures";
-import { CameraMode } from "@/types/Camera";
+import { CameraMode } from "./types/Camera";
 
 await preloadTextures();
 
@@ -16,14 +14,16 @@ const scene = Scene.scene;
 const seed = 0;
 const world = new World(seed);
 world.generate();
-// world.addLighting();
+
 scene.add(world);
 
-// const player = new Player(scene, playerCamera, world);
+const camera = Camera.camera;
 
-Camera.switchCamera(CameraMode.ORBIT, new Vector3(64, 64, 64));
+const player = new Player(scene, camera, world);
 
-const game = new Game(world);
+const game = new Game(world, player, scene);
+
+// Camera.switchCamera(CameraMode.ORBIT)
 
 GameHelper.displayAxesHelper();
 

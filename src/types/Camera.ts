@@ -1,4 +1,5 @@
 export enum CameraMode {
-    PLAYER,
+    FPS,
+    TPS,
     ORBIT,
 };
