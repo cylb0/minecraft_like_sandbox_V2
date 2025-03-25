@@ -37,3 +37,6 @@ export const DEFAULT_SUNLIGHT_COLOR = 0xffffff;
 export const DEFAULT_SUNLIGHT_INTENSITY = 1;
 export const DEFAULT_SUNLIGHT_RADIUS = Math.max(DEFAULT_RENDER_RADIUS * DEFAULT_CHUNK_DIMENSIONS.width * 1.5, DEFAULT_CHUNK_DIMENSIONS.depth * 1.5);
 export const DEFAULT_SUNLIGHT_SHADOW_MAPSIZE = 1200;
+
+/** Gravitational acceleration (m/s²). */
+export const DEFAULT_GRAVITY = 9.81;
