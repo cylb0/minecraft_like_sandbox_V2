@@ -17,14 +17,14 @@ class Player extends Group implements IMovable {
     #world: World;
     #model: Mesh;
 
-
     /** PointerLockControls used for FPS only. */
     #pointerLockControls?: PointerLockControls;
 
     #keys: { [key: string]: boolean } = {};
 
-    baseSpeed: number = 5;
+    #baseSpeed: number = 5;
     #isGrounded = false;
+    #movementDirection: Vector3 = new Vector3()
     #velocity: Vector3 = new Vector3();
 
     /** Locks pointer. */
@@ -78,6 +78,10 @@ class Player extends Group implements IMovable {
         }
     }
 
+    get baseSpeed(): number {
+        return this.#baseSpeed;
+    }
+
     get isGrounded(): boolean {
         return this.#isGrounded;
     }
@@ -90,27 +94,41 @@ class Player extends Group implements IMovable {
         return this.#model;
     }
 
+    get movementDirection(): Vector3 {
+        return this.#movementDirection;
+    }
+
     get velocity(): Vector3 {
         return this.#velocity;
     }
 
     /**
-     * Moves the player.
+     * Updates the horizontal movement vector based on inputs.
      * 
-     * - Handle key inputs.
+     * - Compute direction using current inputs.
+     * - Normalizes the vector to avoid diagonal speeding.
+     * - Vertical movement is set to 0 to prevent flying.
+     */
+    updateMovementDirection(): void {
+        const direction = this.#computeMovementDirection()
+        direction.normalize()
+        this.#movementDirection.set(direction.x, 0, direction.z)
+    }
+
+    /**
+     * Moves the player based on velocity and elapsed time since last render.
+     * 
+     * - Uses `baseSpeed` and `movementDirection` vector to apply horizontal velocity.
+     * - Applies vertical velocity from gravity or jump. 
      * 
      * @param delta - The elapsed time since last render (in ms).
      */
     move(delta: number): void {
-        const direction = this.#computeMovementDirection();
+        this.velocity.x = this.#movementDirection.x * this.baseSpeed
+        this.velocity.z = this.#movementDirection.z * this.baseSpeed
 
-        if (direction.lengthSq() > 0) {
-            direction.normalize().multiplyScalar(this.baseSpeed);
-            this.velocity.x = direction.x;
-            this.velocity.z = direction.z;
-
-            this.position.add(this.velocity.clone().multiplyScalar(delta));
-        }
+        const actualMovement = this.velocity.clone().multiplyScalar(delta);
+        this.position.add(actualMovement);
     }
 
     jump(): void {
@@ -294,6 +312,7 @@ class Player extends Group implements IMovable {
      */
     #onKeyUp(event: KeyboardEvent): void {
         this.#keys[event.code] = false;
+        if (event.code === 'KeyR') this.position.set(0, 50, 0)
     }
 
     /**

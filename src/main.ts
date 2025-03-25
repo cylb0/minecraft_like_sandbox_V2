@@ -21,7 +21,7 @@ const camera = Camera.camera;
 
 const player = new Player(scene, camera, world);
 
-const game = new Game(world, player);
+const game = new Game(world, player, scene);
 
 // Camera.switchCamera(CameraMode.ORBIT)
 
