@@ -1,4 +1,5 @@
 import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
+import Player from "@/units/Player";
 import { Box3, Vector3 } from "three";
 
 /**
@@ -32,3 +33,35 @@ export function getBlockRange(box: Box3) {
         maxZ: Math.ceil(box.max.z),
     };
 };
+
+/**
+ * Sorts collisions based on the smallest overlap axis with the player.
+ * - Used to resolve collisions.
+ * - Box3 and Vectors are reused for performance.
+ * 
+ * @param player - The player to overlap with.
+ * @param collisions - An array of `Box3` objects representing blocks in space.
+ * @returns The sorted array of `Box3`.
+ */
+export function sortCollisionsByOverlap(player: Player, collisions: Array<Box3>): Array<Box3> {
+     const playerBox = player.boundingBox;
+
+     const intersectionA = new Box3();
+     const intersectionB = new Box3();
+
+     const sizeA = new Vector3();
+     const sizeB = new Vector3();
+
+    return collisions.sort((a, b) => {
+        intersectionA.copy(playerBox).intersect(a);
+        intersectionB.copy(playerBox).intersect(b);
+
+        intersectionA.getSize(sizeA);
+        intersectionB.getSize(sizeB);
+
+        const minA = Math.min(sizeA.x, sizeA.y, sizeA.z);
+        const minB = Math.min(sizeB.x, sizeB.y, sizeB.z);
+
+        return minA - minB;
+    })
+}
