@@ -53,9 +53,10 @@ class Physics {
      * @param delta - The amount of time passed since last render.
      */
     #applyGravity(player: Player, delta: number): void {
-        player.velocity.y -= DEFAULT_GRAVITY * delta;
-        player.velocity.y = Math.max(player.velocity.y, PLAYER_MAX_VELOCITY_Y)
-        player.setIsGrounded(false);
+        if (!player.isGrounded) {
+            player.velocity.y -= DEFAULT_GRAVITY * delta;
+            player.velocity.y = Math.max(player.velocity.y, PLAYER_MAX_VELOCITY_Y)
+        }
     }
 
     /**
