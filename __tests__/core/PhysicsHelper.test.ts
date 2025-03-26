@@ -1,7 +1,8 @@
 jest.unmock("three");
 
-import { DEFAULT_BLOCK_SIZE } from "@/constants/block"
-import { getBlockBoundingBox, getBlockRange, sortCollisionsByOverlap } from "@/helpers/PhysicsHelper";
+import { DEFAULT_BLOCK_SIZE, getBlocks } from "@/constants/block"
+import { getBlockBoundingBox, getBlockRange, isBlockSolid, sortCollisionsByOverlap } from "@/helpers/PhysicsHelper";
+import { BlockType } from "@/types/Blocks";
 import Player from "@/units/Player";
 import { Box3, Vector3 } from "three";
 
@@ -110,5 +111,33 @@ describe("PhysicsHelper", () => {
                 mediumOverlapCollision1
             ]);
         });
+    });
+
+    describe("isBlockSolid", () => {
+        let getBlocksMock: jest.SpyInstance;
+
+        beforeAll(() => {
+            getBlocksMock = jest.spyOn(require("@/constants/block"), "getBlocks").mockReturnValue({
+                [BlockType.Sand]: {},
+                [BlockType.Stone]: { solid: true },
+                [BlockType.Water]: { solid: false },
+            });
+        });
+
+        afterAll(() => {
+            getBlocksMock.mockRestore();
+        });
+
+        it("should correctly find solid blocks with explicit solid value", () => {
+            expect(isBlockSolid(BlockType.Stone)).toBe(true);
+        });
+
+        it("should correctly find solid blocks with no explicit solid value", () => {
+            expect(isBlockSolid(BlockType.Sand)).toBe(true);
+        });
+
+        it("should find non-solid blocks", () => {
+            expect(isBlockSolid(BlockType.Water)).toBe(false);
+        })
     });
 })
