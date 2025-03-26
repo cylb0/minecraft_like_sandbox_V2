@@ -12,3 +12,4 @@ export const PLAYER_SPAWN_POSITION = { x: 0, z: 0 };
 
 /** Max speed on Y axis (m/s²). */
 export const PLAYER_MAX_VELOCITY_Y = -200;
+export const PLAYER_JUMP_VELOCITY = 6;

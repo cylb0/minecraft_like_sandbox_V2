@@ -53,9 +53,10 @@ class Physics {
      * @param delta - The amount of time passed since last render.
      */
     #applyGravity(player: Player, delta: number): void {
-        player.velocity.y -= DEFAULT_GRAVITY * delta;
-        player.velocity.y = Math.max(player.velocity.y, PLAYER_MAX_VELOCITY_Y)
-        player.setIsGrounded(false);
+        if (!player.isGrounded) {
+            player.velocity.y -= DEFAULT_GRAVITY * delta;
+            player.velocity.y = Math.max(player.velocity.y, PLAYER_MAX_VELOCITY_Y)
+        }
     }
 
     /**
@@ -136,7 +137,10 @@ class Physics {
         const candidates = this.#getSolidBlocksPositionInRange(range, world);
         const collisions = this.#getCollisions(candidates, player)
 
-        if (collisions.length === 0) return false;
+        if (collisions.length === 0) {
+            player.setIsGrounded(false);
+            return false;
+        }
 
         this.#resolveCollision(player, collisions);
         return true;
