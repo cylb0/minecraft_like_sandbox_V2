@@ -97,7 +97,7 @@ class Chunk extends Group {
                 const noise = simplex.noise(worldX / scale, worldZ / scale);
 
                 if (noise > .1) {
-                    if (this.getBlock(x, level, z)) {
+                    if (this.getBlock(x, level, z)?.blockType === BlockType.Empty) {
                         this.setBlockType(x, level, z, BlockType.Cloud);
                     }
                 }
