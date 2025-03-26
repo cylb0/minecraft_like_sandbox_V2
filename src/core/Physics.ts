@@ -137,7 +137,10 @@ class Physics {
         const candidates = this.#getSolidBlocksPositionInRange(range, world);
         const collisions = this.#getCollisions(candidates, player)
 
-        if (collisions.length === 0) return false;
+        if (collisions.length === 0) {
+            player.setIsGrounded(false);
+            return false;
+        }
 
         this.#resolveCollision(player, collisions);
         return true;
