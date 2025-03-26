@@ -78,8 +78,8 @@ class Game {
                 accumulator -= FIXED_TIME_STEP
             }
             
-            // this.#world.sunLight?.update();
-            // this.#world.moonLight?.update();
+            this.#world.sunLight?.update();
+            this.#world.moonLight?.update();
             
             Renderer.renderer.render(GameScene.scene, Camera.camera);
 
