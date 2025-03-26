@@ -1,5 +1,5 @@
 import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
-import { PLAYER_DIMENSIONS, PLAYER_SPAWN_POSITION } from "@/constants/player";
+import { PLAYER_DIMENSIONS, PLAYER_JUMP_VELOCITY, PLAYER_SPAWN_POSITION } from "@/constants/player";
 import Camera from "@/core/scene/Camera";
 import IMovable from "@/interfaces/IMovable";
 import { CameraMode } from "@/types/Camera";
@@ -13,7 +13,6 @@ import { PointerLockControls } from "three/examples/jsm/controls/PointerLockCont
  */
 class Player extends Group implements IMovable {
     #camera: PerspectiveCamera;
-    #scene: Scene;
     #world: World;
     #model: Mesh;
 
@@ -46,7 +45,6 @@ class Player extends Group implements IMovable {
     constructor(scene: Scene, camera: PerspectiveCamera, world: World) {
         super();
         this.#camera = camera;
-        this.#scene = scene;
         this.#world = world;
         
         this.#model = this.#createPlayer();
@@ -82,6 +80,22 @@ class Player extends Group implements IMovable {
         return this.#baseSpeed;
     }
 
+    /**
+     * Computes and returns an **axis-aligned bounding box** for the player.
+     * 
+     * - Overrides `getBoundingBox()` from `Collidable`.
+     * - Ignores player's rotation to prevent weird collision behavior.
+     * 
+     * @returns The current axis-aligned bounding box of the object.
+     */
+    get boundingBox(): Box3 {
+        const currentPosition = this.position.clone();
+        return new Box3().setFromCenterAndSize(
+            currentPosition,
+            new Vector3(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth)
+        );
+    }
+
     get isGrounded(): boolean {
         return this.#isGrounded;
     }
@@ -103,19 +117,6 @@ class Player extends Group implements IMovable {
     }
 
     /**
-     * Updates the horizontal movement vector based on inputs.
-     * 
-     * - Compute direction using current inputs.
-     * - Normalizes the vector to avoid diagonal speeding.
-     * - Vertical movement is set to 0 to prevent flying.
-     */
-    updateMovementDirection(): void {
-        const direction = this.#computeMovementDirection()
-        direction.normalize()
-        this.#movementDirection.set(direction.x, 0, direction.z)
-    }
-
-    /**
      * Moves the player based on velocity and elapsed time since last render.
      * 
      * - Uses `baseSpeed` and `movementDirection` vector to apply horizontal velocity.
@@ -131,24 +132,17 @@ class Player extends Group implements IMovable {
         this.position.add(actualMovement);
     }
 
-    jump(): void {
-        throw new Error("Method not implemented.");
-    }
-
     /**
-     * Computes and returns an **axis-aligned bounding box** for the player.
-     * 
-     * - Overrides `getBoundingBox()` from `Collidable`.
-     * - Ignores player's rotation to prevent weird collision behavior.
-     * 
-     * @returns The current axis-aligned bounding box of the object.
+     * Performs a jump.
+     *
+     * - Jump can only be performed when player is grounded.
+     * - Sets a positive velocity on Y-axis and "ungrounds" player.
      */
-    get boundingBox(): Box3 {
-        const currentPosition = this.position.clone();
-        return new Box3().setFromCenterAndSize(
-            currentPosition,
-            new Vector3(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth)
-        );
+    jump(): void {
+        if (this.#isGrounded) {
+            this.velocity.y = PLAYER_JUMP_VELOCITY;
+            this.#isGrounded = false;
+        }
     }
 
     /**
@@ -157,6 +151,19 @@ class Player extends Group implements IMovable {
     toggleCamera(): void {
         const mode = Camera.mode === CameraMode.FPS ? CameraMode.TPS : CameraMode.FPS;
         this.#switchCamera(mode);
+    }
+
+    /**
+     * Updates the horizontal movement vector based on inputs.
+     * 
+     * - Compute direction using current inputs.
+     * - Normalizes the vector to avoid diagonal speeding.
+     * - Vertical movement is set to 0 to prevent flying.
+     */
+    updateMovementDirection(): void {
+        const direction = this.#computeMovementDirection()
+        direction.normalize()
+        this.#movementDirection.set(direction.x, 0, direction.z)
     }
 
     /**
@@ -303,6 +310,15 @@ class Player extends Group implements IMovable {
      */
     #onKeyDown(event: KeyboardEvent): void {
         this.#keys[event.code] = true;
+
+        if (event.code === "KeyR") {
+            this.position.y = 50
+            this.#isGrounded = false
+        }
+
+        if (event.code === "Space") {
+            this.jump();
+        }
     }
 
     /**
@@ -312,7 +328,6 @@ class Player extends Group implements IMovable {
      */
     #onKeyUp(event: KeyboardEvent): void {
         this.#keys[event.code] = false;
-        if (event.code === 'KeyR') this.position.set(0, 50, 0)
     }
 
     /**
