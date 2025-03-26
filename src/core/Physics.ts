@@ -5,7 +5,7 @@ import { Box3Helper } from "three";
 import { Box3, Group, Scene, Vector3 } from "three";
 import { epsilonSign } from "@/helpers/MathUtils";
 import { PLAYER_DIMENSIONS, PLAYER_MAX_VELOCITY_Y } from "@/constants/player";
-import { getBlockBoundingBox, getBlockRange, sortCollisionsByOverlap } from "@/helpers/PhysicsHelper";
+import { getBlockBoundingBox, getBlockRange, isBlockSolid, sortCollisionsByOverlap } from "@/helpers/PhysicsHelper";
 import { DEFAULT_GRAVITY } from "@/constants/world";
 
 class Physics {
@@ -97,7 +97,7 @@ class Physics {
     }
 
     /**
-     * Retrieves positions of all solid (non-empty) blocks within a given range.
+     * Retrieves positions of all non-empty solid blocks within a given range.
      * 
      * @param range - An object defining the min and max coordinates on each axis.
      * @param world - The `World` containing the blocks.
@@ -116,7 +116,11 @@ class Physics {
             for (let y = range.minY; y <= range.maxY; y++) {
                 for (let z = range.minZ; z <= range.maxZ; z++) {
                     const block = world.getBlock(x, y, z);
-                    if (!block || block.blockType === BlockType.Empty) continue;
+                    if (
+                        !block || 
+                        block.blockType === BlockType.Empty ||
+                        !isBlockSolid(block.blockType)
+                    ) continue;
                     candidates.push(new Vector3(x, y, z))
                 }
             }
