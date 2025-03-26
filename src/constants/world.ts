@@ -40,3 +40,6 @@ export const DEFAULT_SUNLIGHT_SHADOW_MAPSIZE = 1200;
 
 /** Gravitational acceleration (m/s²). */
 export const DEFAULT_GRAVITY = 9.81;
+
+export const DEFAULT_CLOUDS_LEVEL = DEFAULT_CHUNK_DIMENSIONS.depth * .75;
+export const DEFAULT_CLOUDS_SCALE = 40;
