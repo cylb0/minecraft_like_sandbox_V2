@@ -7,6 +7,12 @@ export interface WorldConfig {
     water: WaterConfig;
     size: WorldSizeConfig;
     light: LightingConfig;
+    clouds: CloudsConfig;
+};
+
+export interface CloudsConfig {
+    level: number;
+    scale: number;
 };
 
 export interface TerrainConfig {

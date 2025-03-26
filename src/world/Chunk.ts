@@ -55,6 +55,7 @@ class Chunk extends Group {
         this.#generateStoneTerrain();
         this.#generateSurface();
         this.#generateWater();
+        this.#generateClouds();
     }
 
     /**
@@ -73,6 +74,33 @@ class Chunk extends Group {
         for (let x = 0; x < this.#config.size.chunkWidth; x++) {
             for (let z = 0; z < this.#config.size.chunkWidth; z++) {
                 this.setBlockType(x, 0, z, BlockType.Bedrock);
+            }
+        }
+    }
+
+    /**
+     * Generates pseudo random clouds at given height.
+     * 
+     * - Uses simplex noise to create random clouds.
+     */
+    #generateClouds() {
+        const simplex = new SimplexNoise(this.#rng);
+
+        for (let x = 0; x < this.#config.size.chunkWidth; x++) {
+            for (let z = 0; z < this.#config.size.chunkWidth; z++) {
+                const worldX = this.position.x + x;
+                const worldZ = this.position.z + z;
+
+                const level = this.#config.clouds.level;
+                const scale = this.#config.clouds.scale;
+
+                const noise = simplex.noise(worldX / scale, worldZ / scale);
+
+                if (noise > .1) {
+                    if (this.getBlock(x, level, z)?.blockType === BlockType.Empty) {
+                        this.setBlockType(x, level, z, BlockType.Cloud);
+                    }
+                }
             }
         }
     }

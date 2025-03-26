@@ -33,31 +33,13 @@ export function getBlocks(): BlocksType {
             [BlockType.Bedrock]: {
                 material: new MeshLambertMaterial({ map: TEXTURES.bedrock }),
             },
-            [BlockType.Water]: {
-                color: 0x1e90ff,
-                opacity: .5,
-            },
-            [BlockType.Sand]: {
-                material: new MeshLambertMaterial({ map: TEXTURES.sand }),
-            },
-            [BlockType.Stone]: {
-                material: new MeshLambertMaterial({ map: TEXTURES.stone }),
-            },
-            [BlockType.Dirt]: {
-                material: new MeshLambertMaterial({ map: TEXTURES.dirt }),
-            },
-            [BlockType.Grass]: {
-                material: [
-                    new MeshLambertMaterial({ map: TEXTURES.grass_side }),
-                    new MeshLambertMaterial({ map: TEXTURES.grass_side }),
-                    new MeshLambertMaterial({ map: TEXTURES.grass_top }),
-                    new MeshLambertMaterial({ map: TEXTURES.dirt }),
-                    new MeshLambertMaterial({ map: TEXTURES.grass_side }),
-                    new MeshLambertMaterial({ map: TEXTURES.grass_side }),
-                ]
-            },
-            [BlockType.Snow]: {
-                material: new MeshLambertMaterial({ map: TEXTURES.snow }),
+            [BlockType.Cloud]: {
+                material: new MeshLambertMaterial({
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: .9,
+                }),
+                solid: false,
             },
             [BlockType.CoalOre]: {
                 material: new MeshLambertMaterial({ map: TEXTURES.coal_ore }),
@@ -74,6 +56,31 @@ export function getBlocks(): BlocksType {
                         minHeight: .75,
                         maxHeight: 1,
                     }
+                ]
+            },
+            [BlockType.Dirt]: {
+                material: new MeshLambertMaterial({ map: TEXTURES.dirt }),
+            },
+            [BlockType.GoldOre]: {
+                material: new MeshLambertMaterial({ map: TEXTURES.gold_ore }),
+                rarity: .9,
+                scale: { x: 15, y: 12, z: 40 },
+                batches: [
+                    {
+                        distribution: DistributionType.Triangular,
+                        minHeight: 0,
+                        maxHeight: .3,
+                    }
+                ]
+            },
+            [BlockType.Grass]: {
+                material: [
+                    new MeshLambertMaterial({ map: TEXTURES.grass_side }),
+                    new MeshLambertMaterial({ map: TEXTURES.grass_side }),
+                    new MeshLambertMaterial({ map: TEXTURES.grass_top }),
+                    new MeshLambertMaterial({ map: TEXTURES.dirt }),
+                    new MeshLambertMaterial({ map: TEXTURES.grass_side }),
+                    new MeshLambertMaterial({ map: TEXTURES.grass_side }),
                 ]
             },
             [BlockType.IronOre]: {
@@ -98,18 +105,20 @@ export function getBlocks(): BlocksType {
                     }
                 ]
             },
-            [BlockType.GoldOre]: {
-                material: new MeshLambertMaterial({ map: TEXTURES.gold_ore }),
-                rarity: .9,
-                scale: { x: 15, y: 12, z: 40 },
-                batches: [
-                    {
-                        distribution: DistributionType.Triangular,
-                        minHeight: 0,
-                        maxHeight: .3,
-                    }
-                ]
-            }
+            [BlockType.Sand]: {
+                material: new MeshLambertMaterial({ map: TEXTURES.sand }),
+            },
+            [BlockType.Snow]: {
+                material: new MeshLambertMaterial({ map: TEXTURES.snow }),
+            },
+            [BlockType.Stone]: {
+                material: new MeshLambertMaterial({ map: TEXTURES.stone }),
+            },
+            [BlockType.Water]: {
+                color: 0x1e90ff,
+                opacity: .5,
+                solid: false,
+            },
         };
     }
     return BLOCKS_CACHE;

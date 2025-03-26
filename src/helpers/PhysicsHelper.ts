@@ -1,4 +1,5 @@
-import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
+import { DEFAULT_BLOCK_SIZE, getBlocks } from "@/constants/block";
+import { BlockType } from "@/types/Blocks";
 import Player from "@/units/Player";
 import { Box3, Vector3 } from "three";
 
@@ -64,4 +65,15 @@ export function sortCollisionsByOverlap(player: Player, collisions: Array<Box3>)
 
         return minA - minB;
     })
+}
+
+/**
+ * Finds wether or not a given blockType correspond to a solid (that cannot be passed through) block.
+ * 
+ * @param blockType - The block type to check.
+ * @returns `true` if block is solid, `false` otherwise. Defaults to `true` unless explicitely defined.
+ */
+export function isBlockSolid(blockType: BlockType): boolean {
+    const BLOCKS = getBlocks();
+    return BLOCKS[blockType]?.solid ?? true;
 }

@@ -21,7 +21,7 @@ export const DEFAULT_RENDER_RADIUS = 2;
 
 // LIGHTING
 /** Day duration in seconds. (min: 10, max: 86400 = 24h)*/
-export const DEFAULT_DAY_DURATION = 30;
+export const DEFAULT_DAY_DURATION = 60 * 20;
 
 export const DEFAULT_AMBIENTLIGHT_COLOR = 0xffffff;
 export const DEFAULT_AMBIENTLIGHT_INTENSITY = 1;
@@ -40,3 +40,6 @@ export const DEFAULT_SUNLIGHT_SHADOW_MAPSIZE = 1200;
 
 /** Gravitational acceleration (m/s²). */
 export const DEFAULT_GRAVITY = 9.81;
+
+export const DEFAULT_CLOUDS_LEVEL = DEFAULT_CHUNK_DIMENSIONS.depth * .75;
+export const DEFAULT_CLOUDS_SCALE = 20;

@@ -29,4 +29,4 @@ GameHelper.displayAxesHelper();
 
 game.start();
 
-UI.startWorldUi(world);
+// UI.startWorldUi(world);
