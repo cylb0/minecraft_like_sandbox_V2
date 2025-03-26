@@ -12,6 +12,7 @@ export enum BlockType {
     CoalOre = 8,
     IronOre = 9,
     GoldOre = 10,
+    Cloud = 11,
 }
 
 /**
@@ -41,6 +42,7 @@ export interface BlockData {
     /** The fallback color for the block. */
     color?: ColorRepresentation;
     opacity?: number;
+    solid?: boolean;
 };
 
 /**
