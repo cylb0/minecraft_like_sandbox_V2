@@ -34,11 +34,8 @@ export function getBlocks(): BlocksType {
                 material: new MeshLambertMaterial({ map: TEXTURES.bedrock }),
             },
             [BlockType.Cloud]: {
-                material: new MeshLambertMaterial({
-                    color: 0xffffff,
-                    transparent: true,
-                    opacity: .9,
-                }),
+                color: 0xffffff,
+                opacity: .9,
                 solid: false,
             },
             [BlockType.CoalOre]: {
