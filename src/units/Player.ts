@@ -1,10 +1,11 @@
 import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
-import { PLAYER_DIMENSIONS, PLAYER_JUMP_VELOCITY, PLAYER_SPAWN_POSITION } from "@/constants/player";
+import { PLAYER_DIMENSIONS, PLAYER_JUMP_VELOCITY, PLAYER_MAX_BLOCKS_INTERACTION_DISTANCE, PLAYER_SPAWN_POSITION } from "@/constants/player";
 import Camera from "@/core/scene/Camera";
 import IMovable from "@/interfaces/IMovable";
 import { CameraMode } from "@/types/Camera";
+import Chunk from "@/world/Chunk";
 import World from "@/world/World";
-import { Box3, BoxGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
+import { Box3, BoxGeometry, EdgesGeometry, Group, InstancedMesh, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Scene, Vector2, Vector3 } from "three";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 
 /**
@@ -25,6 +26,9 @@ class Player extends Group implements IMovable {
     #isGrounded = false;
     #movementDirection: Vector3 = new Vector3()
     #velocity: Vector3 = new Vector3();
+
+    #rayCaster: Raycaster = new Raycaster(undefined, undefined, 0, PLAYER_MAX_BLOCKS_INTERACTION_DISTANCE);
+    #rayCastTargetBox: LineSegments;
 
     /** Locks pointer. */
     #onClickLock = () => {
@@ -74,6 +78,10 @@ class Player extends Group implements IMovable {
                 this.#keys[code] = false;
             }
         }
+
+        this.#rayCastTargetBox = this.#createRaycastTargetBox();
+        scene.add(this.#rayCastTargetBox);
+    }
     }
 
     get baseSpeed(): number {
@@ -222,6 +230,23 @@ class Player extends Group implements IMovable {
         const playerGeometry = new BoxGeometry(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth);
         const playerMaterial = new MeshBasicMaterial({ color: 0x0000ff, wireframe: true });
         return new Mesh(playerGeometry, playerMaterial);
+    }
+
+    /**
+     * Creates a LineSegments object used to represent targeted block in the world.
+     * 
+     * - Used to highlight block that is currently targeted by player's raycasting.
+     * 
+     * @returns A LineSegments object to highlight targeted block's edges.
+     */
+    #createRaycastTargetBox(): LineSegments {
+        const geometry = new BoxGeometry(1.01, 1.01, 1.01);
+        const edges = new EdgesGeometry(geometry);
+        const material = new LineBasicMaterial({ 
+            color: 0xffffff,
+        });
+        
+        return new LineSegments(edges, material);
     }
 
     /**
