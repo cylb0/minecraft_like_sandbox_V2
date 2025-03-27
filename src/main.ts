@@ -7,6 +7,7 @@ import GameHelper from "@/helpers/GameHelper";
 import UI from "./helpers/Ui";
 import { preloadTextures } from "@/blocks/textures";
 import { CameraMode } from "./types/Camera";
+import HUD from "@/ui/HUD";
 
 await preloadTextures();
 
@@ -26,6 +27,8 @@ const game = new Game(world, player, scene);
 // Camera.switchCamera(CameraMode.ORBIT)
 
 GameHelper.displayAxesHelper();
+
+HUD.initialize();
 
 game.start();
 
