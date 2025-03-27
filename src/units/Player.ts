@@ -227,7 +227,7 @@ class Player extends Group implements IMovable {
         const mode = Camera.mode;
 
         if (mode === CameraMode.FPS) {
-            this.#camera.position.set(0, PLAYER_DIMENSIONS.height * 3 / 4, 0);
+            this.#camera.position.set(0, PLAYER_DIMENSIONS.height / 4, 0);
         } else if (mode === CameraMode.TPS) {
             const offset = Camera.tpsOffset;
             this.#camera.position.set(offset.x, offset.y, offset.z);
