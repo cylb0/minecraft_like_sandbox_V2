@@ -337,8 +337,8 @@ class Player extends Group implements IMovable {
     #setupPointerLock(): void {
         if (!this.#pointerLockControls) {
             this.#pointerLockControls = new PointerLockControls(this.#camera, document.body);
-            this.#pointerLockControls.minPolarAngle = Math.PI / 4
-            this.#pointerLockControls.maxPolarAngle = Math.PI * 3 / 4
+            this.#pointerLockControls.minPolarAngle = Math.PI * .05;
+            this.#pointerLockControls.maxPolarAngle = Math.PI * .95;
         }
 
         this.#pointerLockControls.connect();
