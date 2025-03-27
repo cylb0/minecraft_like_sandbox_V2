@@ -391,26 +391,13 @@ class Chunk extends Group {
     #testOcclusionCulling(x: number, y: number, z: number): boolean {
         const neighbors = this.getNeighbors(x, y, z);
 
-        let hasEmptyNeighbor = false;
-        let hasTransparentNeighbor = false;
-
         for (const block of neighbors) {
-            if (block === null) {
-                continue
-            };
-
-            if (block.blockType === BlockType.Empty) {
-                hasEmptyNeighbor = true;
-                break;
-            }
-
-            if (this.isBlockTransparent(block.blockType)) {
-                hasTransparentNeighbor = true;
-                break;
-            }
+            if (!block) continue;
+            if (block.blockType === BlockType.Empty) return true;
+            if (this.isBlockTransparent(block.blockType)) return true;
         }
 
-        return hasEmptyNeighbor || hasTransparentNeighbor;
+        return false;
     }
 
     /**
