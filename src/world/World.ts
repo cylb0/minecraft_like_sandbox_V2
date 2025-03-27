@@ -150,6 +150,25 @@ class World extends Group {
     }
 
     /**
+     * Removes a block from the world.
+     * 
+     * - Retrieve corresponding chunk.
+     * - Compute world coordinates to local coordinates.
+     * - Calls `Chunk.removeBlock()`.
+     * 
+     * @param worldX - World x-coordinate.
+     * @param worldY - World y-coordinate.
+     * @param worldZ - World z-coordinate.
+     */
+    removeBlock(worldX: number, worldY: number, worldZ: number): void {
+        const chunk = this.#getOrCreateChunk(worldX, worldZ);
+        console.log('chunk position', chunk.position)
+        const { x, y, z } = this.#getLocalPosition(worldX, worldY, worldZ);
+
+        return chunk.removeBlock(x, y, z);
+    }
+
+    /**
      * Renders all chunks within `renderRadius` distance.
      */
     updateChunksRendering() {

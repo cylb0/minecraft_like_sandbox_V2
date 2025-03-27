@@ -28,11 +28,14 @@ class Chunk extends Group {
     /** Object containing all data required for configuration. */
     #config: WorldConfig;
 
+    #blockRenderer: BlockRenderer;
+
     constructor(seed: number, config: WorldConfig) {
         super();
         this.#rng = new PseudoRandomGenerator(seed);
         this.#config = config;
         this.#initChunk();
+        this.#blockRenderer = new BlockRenderer(this.#config.size.chunkWidth * this.#config.size.chunkWidth *this.#config.size.chunkDepth);
     }
 
     /**
@@ -64,6 +67,38 @@ class Chunk extends Group {
     render() {
         this.#generateMeshes();
     }
+
+    /**
+     * Removes a block from the chunk. 
+     * 
+     * - Verifies that coordinates are correct.
+     * - Verifies that the block is empty.
+     * - Updates the block's type corresponding InstancedMesh to hide the block from the scene. It moves the instance's matrix to a position below the world's lower boundary (y = -1) and decrements the InstancedMesh's count. It also updates chunk's `blocks` setting the block type and coordinates to an `EMPTY_BLOCK`.
+     * 
+     * @param x - Local x-coordinate.
+     * @param y - Local y-coordinate.
+     * @param z - Local z-coordinate.
+     */
+    removeBlock(x: number, y: number, z: number): void {
+        if (this.isBlockInBounds(x, y, z)) {
+            const block = this.getBlock(x, y, z);
+            if (block === null || block.blockType === BlockType.Empty) return;
+
+            const instanceId = block.instanceId;
+            const blockType = block.blockType;
+
+            const mesh = this.#blockRenderer.getBlockType(blockType);
+            mesh.count--;
+
+            const matrix = new Matrix4();
+            matrix.setPosition(0, -1, 0);
+            mesh.setMatrixAt(instanceId, matrix);
+            mesh.instanceMatrix.needsUpdate = true;
+
+            this.blocks[x][y][z] = EMPTY_BLOCK;
+        }
+    }
+
 
     /**
      * Generates bedrock.
