@@ -175,6 +175,41 @@ class Player extends Group implements IMovable {
     }
 
     /**
+     * Updates the player's `Raycaster` to detect intersections with blocks.
+     * 
+     * - Casts a ray from the camera's center.
+     * - If intersections are found.
+     *  - It selects the first intersection.
+     *  - Retrieves the intersected `InstancedMesh`.
+     *  - Finds the corresponding chunk.
+     *  - Extracts the block's transformation matrix.
+     *  - Computes world position for the block.
+     *  - Updates and displays raycast target box to highlight selected block or hides it if there's no intersection.
+     */
+    #updateRayCaster(): void {
+        this.#rayCaster.setFromCamera(new Vector2(), this.#camera)
+        const intersects = this.#rayCaster.intersectObject(this.#world, true);
+        if (intersects.length > 0) {
+            const intersection = intersects[0]
+            const instancedMesh = intersection.object as InstancedMesh
+            const chunk = intersection.object.parent as Chunk
+
+            if (intersection.instanceId !== undefined) {
+                const blockMatrix = new Matrix4()
+                instancedMesh.getMatrixAt(intersection.instanceId, blockMatrix)
+
+                const position = chunk.position.clone();
+                position.applyMatrix4(blockMatrix)
+                
+                this.#rayCastTargetBox.position.copy(position)
+                this.#rayCastTargetBox.visible = true;
+            }
+        } else {
+            this.#rayCastTargetBox.visible = false;
+        }
+    }
+
+    /**
      * Attaches the camera the the Player Group.
      *
      * - Moves camera's position to the player's head if FPS mode.
