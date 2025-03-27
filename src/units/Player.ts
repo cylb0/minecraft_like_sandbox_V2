@@ -82,7 +82,6 @@ class Player extends Group implements IMovable {
         this.#rayCastTargetBox = this.#createRaycastTargetBox();
         scene.add(this.#rayCastTargetBox);
     }
-    }
 
     get baseSpeed(): number {
         return this.#baseSpeed;
@@ -161,6 +160,11 @@ class Player extends Group implements IMovable {
         this.#switchCamera(mode);
     }
 
+    update(): void {
+        this.#updateMovementDirection();
+        this.#updateRayCaster();
+    }
+
     /**
      * Updates the horizontal movement vector based on inputs.
      * 
@@ -168,7 +172,7 @@ class Player extends Group implements IMovable {
      * - Normalizes the vector to avoid diagonal speeding.
      * - Vertical movement is set to 0 to prevent flying.
      */
-    updateMovementDirection(): void {
+    #updateMovementDirection(): void {
         const direction = this.#computeMovementDirection()
         direction.normalize()
         this.#movementDirection.set(direction.x, 0, direction.z)
@@ -310,6 +314,7 @@ class Player extends Group implements IMovable {
     #initListeners(): void {
         document.addEventListener('keydown', this.#onKeyDown.bind(this));
         document.addEventListener('keyup', this.#onKeyUp.bind(this));
+        document.addEventListener('mousedown', this.#onMouseDown.bind(this));
     }
 
     /**
@@ -388,6 +393,22 @@ class Player extends Group implements IMovable {
      */
     #onKeyUp(event: KeyboardEvent): void {
         this.#keys[event.code] = false;
+    }
+
+    /**
+     * Handles mouse down events.
+     * 
+     * - If pointerlock is locked, checks if a block is targeted and removes it.
+     * 
+     * @param event 
+     */
+    #onMouseDown(event: MouseEvent): void {
+        if (this.#pointerLockControls?.isLocked) {
+            if (this.#rayCastTargetBox.visible === true) {
+                const position = this.#rayCastTargetBox.position.clone();
+                this.#world.removeBlock(position.x, position.y, position.z);
+            }
+        }
     }
 
     /**
