@@ -588,6 +588,40 @@ class Chunk extends Group {
     }
 
     /**
+     * Updates the visibility of a block's neighbors.
+     * 
+     * This method is used after removing a block to update it's neighbors visibility as a removed block needs to reveal what it was hiding.
+     * 
+     * - It retrieves all neighbors of the block.
+     * - Ensures that each neighbor exists and is not empty.
+     * - Retrieves the chunk containing each neighbor.
+     * - Converts the neighbor's world position to local coordinates in that chunk.
+     * - Adds the block to the mesh if it is visible.
+     * 
+     * @param x - The local-x coordinate of the block to update neighbors of.
+     * @param y - The local-y coordinate of the block to update neighbors of.
+     * @param z - The local-z coordinate of the block to update neighbors of.
+     */
+    #updateNeighborsVisibility(x: number, y: number, z: number): void {
+        const neighbors = this.getNeighbors(x, y, z); 
+
+        for (const neighbor of neighbors) {
+
+            if (!neighbor.block || neighbor.block.blockType === BlockType.Empty) continue;
+            
+            const neighborChunk = this.#getChunkContainingBlock(neighbor.worldPosition);
+
+            if (!neighborChunk) continue;
+
+            const neighborLocalPosition = neighborChunk.worldToLocal(neighbor.worldPosition)
+
+            if (neighborChunk.isBlockVisible(neighborLocalPosition.x, neighborLocalPosition.y, neighborLocalPosition.z)) {
+                neighborChunk.#addBlockToMesh(neighborLocalPosition.x, neighborLocalPosition.y, neighborLocalPosition.z)
+            }            
+        }
+    }
+
+    /**
      * Disposes of the chunk's resources: instanced meshes and geometries / materials.
      * - Traverses the chunk's object and disposes of `InstancedMesh` instances before
      * clearing the chunk's children.
