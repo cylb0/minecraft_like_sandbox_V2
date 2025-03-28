@@ -215,6 +215,42 @@ class Chunk extends Group {
     }
 
     /**
+     * Adds a block to it's corresponding `InstancedMesh` at given coordinates.
+     * 
+     * - It verifies that coordinates are within the chunk's bounds and that they correspond to an existing non empty block.
+     * - It retrieves the corresponding `InstancedMesh` from `blockRenderer`.
+     * - It checks if a block is already in the mesh for those coordinates.
+     * - Adds the block to the mesh and updates its instance ID.
+     * - Updates both mesh's boundingBox for collisions and boundingSphere for camera view.
+     * 
+     * @param x The x-coordinate of the block to add.
+     * @param y The y-coordinate of the block to add.
+     * @param z The z-coordinate of the block to add.
+     */
+    #addBlockToMesh(x: number, y: number, z: number): void {
+        if (!this.isBlockInBounds(x, y, z)) return;
+
+        const block = this.getBlock(x, y, z);
+        if (!block || block.blockType === BlockType.Empty) return;
+
+        const mesh = this.#blockRenderer.getBlockType(block.blockType);
+
+        if (this.#isBlockAlreadyInMesh(mesh, x, y, z)) return;
+
+        const instanceId = mesh.count;
+        const matrix = new Matrix4();
+        matrix.setPosition(x, y, z);
+        mesh.setMatrixAt(instanceId, matrix);
+
+        this.setInstanceId(x, y, z, instanceId);
+        mesh.count++;
+
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.computeBoundingBox();
+        mesh.computeBoundingSphere();
+    }
+
+    /**
      * Generates bedrock.
      *
      * - Lower layer of the map is made of special indestructible blocks.
