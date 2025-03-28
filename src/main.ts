@@ -3,10 +3,7 @@ import Game from "@/core/Game";
 import Scene from "@/core/scene/GameScene";
 import World from "@/world/World";
 import Player from "./units/Player";
-import GameHelper from "@/helpers/GameHelper";
-import UI from "./helpers/Ui";
 import { preloadTextures } from "@/blocks/textures";
-import { CameraMode } from "./types/Camera";
 import HUD from "@/ui/HUD";
 
 await preloadTextures();
@@ -24,12 +21,6 @@ const player = new Player(scene, camera, world);
 
 const game = new Game(world, player, scene);
 
-// Camera.switchCamera(CameraMode.ORBIT)
-
-GameHelper.displayAxesHelper();
-
 HUD.initialize();
 
 game.start();
-
-// UI.startWorldUi(world);
