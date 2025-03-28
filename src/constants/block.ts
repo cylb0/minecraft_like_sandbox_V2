@@ -32,14 +32,13 @@ export function getBlocks(): BlocksType {
             [BlockType.Empty]: undefined,
             [BlockType.Bedrock]: {
                 material: new MeshLambertMaterial({ map: TEXTURES.bedrock }),
+                hardness: Infinity,
             },
             [BlockType.Cloud]: {
-                material: new MeshLambertMaterial({
-                    color: 0xffffff,
-                    transparent: true,
-                    opacity: .9,
-                }),
+                color: 0xffffff,
+                opacity: .9,
                 solid: false,
+                hardness: Infinity,
             },
             [BlockType.CoalOre]: {
                 material: new MeshLambertMaterial({ map: TEXTURES.coal_ore }),
@@ -56,10 +55,12 @@ export function getBlocks(): BlocksType {
                         minHeight: .75,
                         maxHeight: 1,
                     }
-                ]
+                ],
+                hardness: 1,
             },
             [BlockType.Dirt]: {
                 material: new MeshLambertMaterial({ map: TEXTURES.dirt }),
+                hardness: 1,
             },
             [BlockType.GoldOre]: {
                 material: new MeshLambertMaterial({ map: TEXTURES.gold_ore }),
@@ -71,7 +72,8 @@ export function getBlocks(): BlocksType {
                         minHeight: 0,
                         maxHeight: .3,
                     }
-                ]
+                ],
+                hardness: 1,
             },
             [BlockType.Grass]: {
                 material: [
@@ -81,7 +83,8 @@ export function getBlocks(): BlocksType {
                     new MeshLambertMaterial({ map: TEXTURES.dirt }),
                     new MeshLambertMaterial({ map: TEXTURES.grass_side }),
                     new MeshLambertMaterial({ map: TEXTURES.grass_side }),
-                ]
+                ],
+                hardness: 1,
             },
             [BlockType.IronOre]: {
                 material: new MeshLambertMaterial({ map: TEXTURES.iron_ore }),
@@ -103,21 +106,26 @@ export function getBlocks(): BlocksType {
                         minHeight: 45,
                         maxHeight: 140,
                     }
-                ]
+                ],
+                hardness: 1,
             },
             [BlockType.Sand]: {
                 material: new MeshLambertMaterial({ map: TEXTURES.sand }),
+                hardness: 1,
             },
             [BlockType.Snow]: {
                 material: new MeshLambertMaterial({ map: TEXTURES.snow }),
+                hardness: 1,
             },
             [BlockType.Stone]: {
                 material: new MeshLambertMaterial({ map: TEXTURES.stone }),
+                hardness: 1,
             },
             [BlockType.Water]: {
                 color: 0x1e90ff,
                 opacity: .5,
                 solid: false,
+                hardness: 1,
             },
         };
     }

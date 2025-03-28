@@ -71,7 +71,7 @@ class Game {
 
             accumulator += delta
             
-            this.#player.updateMovementDirection()
+            this.#player.update();
 
             while(accumulator>= FIXED_TIME_STEP) {
                 this.#physics.update(this.#player, this.#world, FIXED_TIME_STEP);

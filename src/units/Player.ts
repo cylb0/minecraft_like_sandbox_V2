@@ -1,10 +1,11 @@
 import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
-import { PLAYER_DIMENSIONS, PLAYER_JUMP_VELOCITY, PLAYER_SPAWN_POSITION } from "@/constants/player";
+import { PLAYER_DIMENSIONS, PLAYER_JUMP_VELOCITY, PLAYER_MAX_BLOCKS_INTERACTION_DISTANCE, PLAYER_SPAWN_POSITION } from "@/constants/player";
 import Camera from "@/core/scene/Camera";
 import IMovable from "@/interfaces/IMovable";
 import { CameraMode } from "@/types/Camera";
+import Chunk from "@/world/Chunk";
 import World from "@/world/World";
-import { Box3, BoxGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
+import { Box3, BoxGeometry, EdgesGeometry, Group, InstancedMesh, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Scene, Vector2, Vector3 } from "three";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 
 /**
@@ -25,6 +26,9 @@ class Player extends Group implements IMovable {
     #isGrounded = false;
     #movementDirection: Vector3 = new Vector3()
     #velocity: Vector3 = new Vector3();
+
+    #rayCaster: Raycaster = new Raycaster(undefined, undefined, 0, PLAYER_MAX_BLOCKS_INTERACTION_DISTANCE);
+    #rayCastTargetBox: LineSegments;
 
     /** Locks pointer. */
     #onClickLock = () => {
@@ -74,6 +78,9 @@ class Player extends Group implements IMovable {
                 this.#keys[code] = false;
             }
         }
+
+        this.#rayCastTargetBox = this.#createRaycastTargetBox();
+        scene.add(this.#rayCastTargetBox);
     }
 
     get baseSpeed(): number {
@@ -153,6 +160,11 @@ class Player extends Group implements IMovable {
         this.#switchCamera(mode);
     }
 
+    update(): void {
+        this.#updateMovementDirection();
+        this.#updateRayCaster();
+    }
+
     /**
      * Updates the horizontal movement vector based on inputs.
      * 
@@ -160,10 +172,45 @@ class Player extends Group implements IMovable {
      * - Normalizes the vector to avoid diagonal speeding.
      * - Vertical movement is set to 0 to prevent flying.
      */
-    updateMovementDirection(): void {
+    #updateMovementDirection(): void {
         const direction = this.#computeMovementDirection()
         direction.normalize()
         this.#movementDirection.set(direction.x, 0, direction.z)
+    }
+
+    /**
+     * Updates the player's `Raycaster` to detect intersections with blocks.
+     * 
+     * - Casts a ray from the camera's center.
+     * - If intersections are found.
+     *  - It selects the first intersection.
+     *  - Retrieves the intersected `InstancedMesh`.
+     *  - Finds the corresponding chunk.
+     *  - Extracts the block's transformation matrix.
+     *  - Computes world position for the block.
+     *  - Updates and displays raycast target box to highlight selected block or hides it if there's no intersection.
+     */
+    #updateRayCaster(): void {
+        this.#rayCaster.setFromCamera(new Vector2(), this.#camera)
+        const intersects = this.#rayCaster.intersectObject(this.#world, true);
+        if (intersects.length > 0) {
+            const intersection = intersects[0]
+            const instancedMesh = intersection.object as InstancedMesh
+            const chunk = intersection.object.parent as Chunk
+
+            if (intersection.instanceId !== undefined) {
+                const blockMatrix = new Matrix4()
+                instancedMesh.getMatrixAt(intersection.instanceId, blockMatrix)
+
+                const position = chunk.position.clone();
+                position.applyMatrix4(blockMatrix)
+                
+                this.#rayCastTargetBox.position.copy(position)
+                this.#rayCastTargetBox.visible = true;
+            }
+        } else {
+            this.#rayCastTargetBox.visible = false;
+        }
     }
 
     /**
@@ -180,7 +227,7 @@ class Player extends Group implements IMovable {
         const mode = Camera.mode;
 
         if (mode === CameraMode.FPS) {
-            this.#camera.position.set(0, PLAYER_DIMENSIONS.height * 3 / 4, 0);
+            this.#camera.position.set(0, PLAYER_DIMENSIONS.height / 4, 0);
         } else if (mode === CameraMode.TPS) {
             const offset = Camera.tpsOffset;
             this.#camera.position.set(offset.x, offset.y, offset.z);
@@ -225,6 +272,23 @@ class Player extends Group implements IMovable {
     }
 
     /**
+     * Creates a LineSegments object used to represent targeted block in the world.
+     * 
+     * - Used to highlight block that is currently targeted by player's raycasting.
+     * 
+     * @returns A LineSegments object to highlight targeted block's edges.
+     */
+    #createRaycastTargetBox(): LineSegments {
+        const geometry = new BoxGeometry(1.01, 1.01, 1.01);
+        const edges = new EdgesGeometry(geometry);
+        const material = new LineBasicMaterial({ 
+            color: 0xffffff,
+        });
+        
+        return new LineSegments(edges, material);
+    }
+
+    /**
      * Disconnects pointer lock controls and removes associated event from document.
      */
     #disposePointerLock(): void {
@@ -250,6 +314,7 @@ class Player extends Group implements IMovable {
     #initListeners(): void {
         document.addEventListener('keydown', this.#onKeyDown.bind(this));
         document.addEventListener('keyup', this.#onKeyUp.bind(this));
+        document.addEventListener('mousedown', this.#onMouseDown.bind(this));
     }
 
     /**
@@ -331,14 +396,30 @@ class Player extends Group implements IMovable {
     }
 
     /**
+     * Handles mouse down events.
+     * 
+     * - If pointerlock is locked, checks if a block is targeted and removes it.
+     * 
+     * @param event 
+     */
+    #onMouseDown(event: MouseEvent): void {
+        if (this.#pointerLockControls?.isLocked) {
+            if (this.#rayCastTargetBox.visible === true) {
+                const position = this.#rayCastTargetBox.position.clone();
+                this.#world.removeBlock(position.x, position.y, position.z);
+            }
+        }
+    }
+
+    /**
      * Sets up pointer lock controls for FPS mouse tracking.
      * Attaches a click listener to the document to lock pointer.
      */
     #setupPointerLock(): void {
         if (!this.#pointerLockControls) {
             this.#pointerLockControls = new PointerLockControls(this.#camera, document.body);
-            this.#pointerLockControls.minPolarAngle = Math.PI / 4
-            this.#pointerLockControls.maxPolarAngle = Math.PI * 3 / 4
+            this.#pointerLockControls.minPolarAngle = Math.PI * .05;
+            this.#pointerLockControls.maxPolarAngle = Math.PI * .95;
         }
 
         this.#pointerLockControls.connect();

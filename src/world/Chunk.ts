@@ -1,7 +1,8 @@
-import { EMPTY_BLOCK, getBlocks, getOres} from "@/constants/block";
+import { EMPTY_BLOCK, getOres} from "@/constants/block";
+import BlockHelper from "@/helpers/BlockHelper";
 import BlockRenderer from "@/helpers/BlockRenderer";
 import PseudoRandomGenerator from "@/helpers/PseudoRandomGenerator";
-import { Block, BlockData, BlockType, DistributionType } from "@/types/Blocks";
+import { Block, BlockType, DistributionType } from "@/types/Blocks";
 import { WorldConfig } from "@/types/Config";
 import { Group, InstancedMesh, Matrix4, Vector3 } from "three";
 
@@ -28,22 +29,32 @@ class Chunk extends Group {
     /** Object containing all data required for configuration. */
     #config: WorldConfig;
 
+    #blockRenderer: BlockRenderer;
+
     constructor(seed: number, config: WorldConfig) {
         super();
         this.#rng = new PseudoRandomGenerator(seed);
         this.#config = config;
         this.#initChunk();
+        this.#blockRenderer = new BlockRenderer(this.#config.size.chunkWidth * this.#config.size.chunkWidth *this.#config.size.chunkDepth);
     }
 
     /**
-     * Initializes the chunk by setting all it's block to empty blocks.
+     * Retrieves the highest empty block coordinate of a core (chunk section at given `(x, z)`).
+     * 
+     * @param x x-coordinate of the core.
+     * @param z z-coordinate of the core.
+     * @returns the y-coordinate of the highest empty block found.
      */
-    #initChunk() {
-        this.blocks = Array.from({ length: this.#config.size.chunkWidth }, () =>
-            Array.from({ length: this.#config.size.chunkDepth }, () =>
-                Array.from({ length: this.#config.size.chunkWidth }, () => ({ ...EMPTY_BLOCK }))
-            )
-        );
+    findHighestEmptyBlock(x: number, z: number): number {
+        let highestBlockY = 0;
+        for (let y = this.#config.size.chunkDepth - 1; y >= 0; y--) {
+            if (this.getBlock(x, y, z)?.blockType !== BlockType.Empty) {
+                highestBlockY = y;
+                break;
+            }
+        }
+        return highestBlockY;
     }
 
     /**
@@ -59,10 +70,173 @@ class Chunk extends Group {
     }
 
     /**
+     * Returns block data for given coordinates.
+     * 
+     * @param x - x-coordinate within the chunk.
+     * @param y - y-coordinate within the chunk.
+     * @param z - z-coordinate within the chunk.
+     * @returns a `Block` object if found, `null` otherwise.
+     */
+    getBlock(x: number, y: number, z: number): Block | null {
+        if (this.isBlockInBounds(x, y, z)) {
+            return this.blocks[x][y][z];
+        } 
+        return null;
+    }
+
+    /**
+     * Retrieves all 6 potential neighbors of a block.
+     * 
+     * - Returns an empty array if provided coordinates are out of bound.
+     * 
+     * @param x - x-coordinate within the chunk.
+     * @param y - y-coordinate within the chunk.
+     * @param z - z-coordinate within the chunk.
+     * @returns an array containing all neighbors if found as well as their world position.
+     */
+    getNeighbors(x: number, y: number, z: number): Array<{ block: Block | null; worldPosition: Vector3 }> {
+        if (!this.isBlockInBounds(x, y, z)) return [];
+        
+        const neighbors = [
+            { block: this.getBlock(x - 1, y, z), worldPosition: new Vector3(this.position.x + x - 1, this.position.y + y, this.position.z + z) },
+            { block: this.getBlock(x + 1, y, z), worldPosition: new Vector3(this.position.x + x + 1, this.position.y + y, this.position.z + z)},
+            { block: this.getBlock(x , y - 1, z), worldPosition: new Vector3(this.position.x + x, this.position.y + y - 1, this.position.z + z) },
+            { block: this.getBlock(x , y + 1, z), worldPosition: new Vector3(this.position.x + x, this.position.y + y + 1, this.position.z + z) },
+            { block: this.getBlock(x , y, z - 1), worldPosition: new Vector3(this.position.x + x, this.position.y + y, this.position.z + z - 1) },
+            { block: this.getBlock(x , y, z + 1), worldPosition: new Vector3(this.position.x + x, this.position.y + y, this.position.z + z + 1) }
+        ];
+
+        const blockPosition = new Vector3(x, y, z);
+
+        if (x === 0) neighbors[0].block = this.#getNeighborChunkBlock(-1, 0, blockPosition);
+        if (x === this.#config.size.chunkWidth - 1) neighbors[1].block = this.#getNeighborChunkBlock(1, 0, blockPosition);
+        if (z === 0) neighbors[4].block = this.#getNeighborChunkBlock(0, -1, blockPosition);
+        if (z === this.#config.size.chunkWidth - 1) neighbors[5].block = this.#getNeighborChunkBlock(0, 1, blockPosition);
+
+        return neighbors;
+    }
+
+    /**
+     * Checks wether given coordinates represent an existing block within the chunk.
+     * 
+     * @param x - x-coordinate within the chunk.
+     * @param y - y-coordinate within the chunk.
+     * @param z - z-coordinate within the chunk.
+     */
+    isBlockInBounds(x: number, y: number, z: number): boolean {
+        return (
+            x >= 0 && x < this.#config.size.chunkWidth &&
+            y >= 0 && y < this.#config.size.chunkDepth &&
+            z >= 0 && z < this.#config.size.chunkWidth
+        );
+    }
+
+    /**
+     * Checks wether a block is visible or not.
+     * 
+     * - Verify occlusion culling.
+     *
+     * @param x - x-coordinate within the chunk.
+     * @param y - y-coordinate within the chunk.
+     * @param z - z-coordinate within the chunk.
+     * @returns `true` if block is visible, `false` otherwise.
+     */
+    isBlockVisible(x: number, y: number, z: number): boolean {
+        return this.#testOcclusionCulling(x, y, z);
+    }
+
+    /**
      * Renders a chunk.
     */
     render() {
         this.#generateMeshes();
+    }
+
+    /**
+     * Removes a block from the chunk. 
+     * 
+     * - Verifies that coordinates are correct.
+     * - Verifies that the block is empty.
+     * - Updates the block's type corresponding InstancedMesh to hide the block from the scene. It moves the instance's matrix to a position below the world's lower boundary (y = -1) and decrements the InstancedMesh's count. It also updates chunk's `blocks` setting the block type and coordinates to an `EMPTY_BLOCK`.
+     * 
+     * @param x - Local x-coordinate.
+     * @param y - Local y-coordinate.
+     * @param z - Local z-coordinate.
+     */
+    removeBlock(x: number, y: number, z: number): void {
+        if (this.isBlockInBounds(x, y, z)) {
+            const block = this.getBlock(x, y, z);
+
+            if (block === null || !BlockHelper.isDestroyable(block.blockType)) return;
+
+            this.#hideBlockInstance(block);
+
+            this.blocks[x][y][z] = EMPTY_BLOCK;
+
+            this.#updateNeighborsVisibility(x, y, z);
+        }
+    }
+
+    /**
+     * Adds a new BlockType for given block if it exists.
+     * @param x - x-coordinate within the chunk.
+     * @param y - y-coordinate within the chunk.
+     * @param z - z-coordinate within the chunk.
+     * @param blockType - The blocktype to add.
+     */
+    setBlockType(x: number, y: number, z: number, blockType: BlockType): void {
+        if (this.isBlockInBounds(x, y, z)) {
+            this.blocks[x][y][z].blockType = blockType;
+        }
+    }
+
+    /**
+     * Updates instance id for given block if it exists.
+     * @param x - x-coordinate within the chunk.
+     * @param y - y-coordinate within the chunk.
+     * @param z - z-coordinate within the chunk.
+     * @param blockType - The blocktype to add.
+     */
+    setInstanceId(x: number, y: number, z: number, instanceId: number): void {
+        if (this.isBlockInBounds(x, y, z)) {
+            this.blocks[x][y][z].instanceId = instanceId;
+        }
+    }
+
+    /**
+     * Adds a block to it's corresponding `InstancedMesh` at given coordinates.
+     * 
+     * - It verifies that coordinates are within the chunk's bounds and that they correspond to an existing non empty block.
+     * - It retrieves the corresponding `InstancedMesh` from `blockRenderer`.
+     * - It checks if a block is already in the mesh for those coordinates.
+     * - Adds the block to the mesh and updates its instance ID.
+     * - Updates both mesh's boundingBox for collisions and boundingSphere for camera view.
+     * 
+     * @param x The x-coordinate of the block to add.
+     * @param y The y-coordinate of the block to add.
+     * @param z The z-coordinate of the block to add.
+     */
+    #addBlockToMesh(x: number, y: number, z: number): void {
+        if (!this.isBlockInBounds(x, y, z)) return;
+
+        const block = this.getBlock(x, y, z);
+        if (!block || block.blockType === BlockType.Empty) return;
+
+        const mesh = this.#blockRenderer.getBlockType(block.blockType);
+
+        if (this.#isBlockAlreadyInMesh(mesh, x, y, z)) return;
+
+        const instanceId = mesh.count;
+        const matrix = new Matrix4();
+        matrix.setPosition(x, y, z);
+        mesh.setMatrixAt(instanceId, matrix);
+
+        this.setInstanceId(x, y, z, instanceId);
+        mesh.count++;
+
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.computeBoundingBox();
+        mesh.computeBoundingSphere();
     }
 
     /**
@@ -103,6 +277,42 @@ class Chunk extends Group {
                 }
             }
         }
+    }
+
+    /**
+     * Generates the instanced meshes for the chunk's blocks.
+     * It iterates through all blocks, checks their visibility, and adds them to the appropriate instanced mesh.
+     */
+    #generateMeshes() {
+        this.dispose();
+
+        const matrix = new Matrix4();
+
+        for (let x = 0; x < this.#config.size.chunkWidth; x++) {
+            for (let y = 0; y < this.#config.size.chunkDepth; y++) {
+                for (let z = 0; z < this.#config.size.chunkWidth; z++) {
+                    const block = this.getBlock(x, y, z);
+                    if (block === null) continue;
+
+                    const blockType = block.blockType;
+                    if (blockType === BlockType.Empty) continue;
+
+                    if (this.isBlockVisible(x, y, z) || blockType === BlockType.Bedrock) {
+                        const mesh = this.#blockRenderer.getBlockType(blockType);
+                        const instanceId = mesh.count;
+
+                        matrix.setPosition(x, y, z);
+                        mesh.setMatrixAt(instanceId, matrix);
+                        this.setInstanceId(x, y, z, instanceId);
+                        mesh.count++;
+                    }
+                }
+            }
+        }
+
+        const meshes = this.#blockRenderer.instancedMeshes;
+
+        this.add(...meshes);
     }
 
     /**
@@ -240,209 +450,19 @@ class Chunk extends Group {
     }
 
     /**
-     * Retrieves the highest empty block coordinate of a core (chunk section at given `(x, z)`).
+     * Finds the chunk containing a given block based on its world position.
      * 
-     * @param x x-coordinate of the core.
-     * @param z z-coordinate of the core.
-     * @returns the y-coordinate of the highest empty block found.
+     * @param blockPosition - The position of the block to retrieve chunk of. 
+     * @returns A `Chunk` or `undefined` if not found.
      */
-    findHighestEmptyBlock(x: number, z: number): number {
-        let highestBlockY = 0;
-        for (let y = this.#config.size.chunkDepth - 1; y >= 0; y--) {
-            if (this.getBlock(x, y, z)?.blockType !== BlockType.Empty) {
-                highestBlockY = y;
-                break;
-            }
-        }
-        return highestBlockY;
-    }
+    #getChunkContainingBlock(blockPosition: Vector3): Chunk {
+        const chunkWidth = this.#config.size.chunkWidth;
 
-    /**
-     * Generates the instanced meshes for the chunk's blocks.
-     * It iterates through all blocks, checks their visibility, and adds them to the appropriate instanced mesh.
-     */
-    #generateMeshes() {
-        this.dispose();
-
-        const maxBlocks = this.#config.size.chunkWidth * this.#config.size.chunkWidth *this.#config.size.chunkDepth;
-        const blockRenderer = new BlockRenderer(maxBlocks)
-
-        const matrix = new Matrix4();
-
-        for (let x = 0; x < this.#config.size.chunkWidth; x++) {
-            for (let y = 0; y < this.#config.size.chunkDepth; y++) {
-                for (let z = 0; z < this.#config.size.chunkWidth; z++) {
-                    const block = this.getBlock(x, y, z);
-                    if (block === null) continue;
-
-                    const blockType = block.blockType;
-                    if (blockType === BlockType.Empty) continue;
-
-                    if (this.isBlockVisible(x, y, z)) {
-                        const mesh = blockRenderer.getBlockType(blockType);
-                        const instanceId = mesh.count;
-
-                        matrix.setPosition(x, y, z);
-                        mesh.setMatrixAt(instanceId, matrix);
-                        this.setInstanceId(x, y, z, instanceId);
-                        mesh.count++;
-                    }
-                }
-            }
-        }
-
-        const meshes = blockRenderer.instancedMeshes;
-
-        this.add(...meshes);
-    }
-
-    /**
-     * Returns block data for given coordinates.
-     * 
-     * @param x - x-coordinate within the chunk.
-     * @param y - y-coordinate within the chunk.
-     * @param z - z-coordinate within the chunk.
-     * @returns a `Block` object if found, `null` otherwise.
-     */
-    getBlock(x: number, y: number, z: number): Block | null {
-        if (this.isBlockInBounds(x, y, z)) {
-            return this.blocks[x][y][z];
-        } 
-        return null;
-    }
-
-    /**
-     * Adds a new BlockType for given block if it exists.
-     * @param x - x-coordinate within the chunk.
-     * @param y - y-coordinate within the chunk.
-     * @param z - z-coordinate within the chunk.
-     * @param blockType - The blocktype to add.
-     */
-    setBlockType(x: number, y: number, z: number, blockType: BlockType): void {
-        if (this.isBlockInBounds(x, y, z)) {
-            this.blocks[x][y][z].blockType = blockType;
-        }
-    }
-
-    /**
-     * Updates instance id for given block if it exists.
-     * @param x - x-coordinate within the chunk.
-     * @param y - y-coordinate within the chunk.
-     * @param z - z-coordinate within the chunk.
-     * @param blockType - The blocktype to add.
-     */
-    setInstanceId(x: number, y: number, z: number, instanceId: number): void {
-        if (this.isBlockInBounds(x, y, z)) {
-            this.blocks[x][y][z].instanceId = instanceId;
-        }
-    }
-
-    /**
-     * Checks wether given coordinates represent an existing block within the chunk.
-     * 
-     * @param x - x-coordinate within the chunk.
-     * @param y - y-coordinate within the chunk.
-     * @param z - z-coordinate within the chunk.
-     */
-    isBlockInBounds(x: number, y: number, z: number): boolean {
-        return (
-            x >= 0 && x < this.#config.size.chunkWidth &&
-            y >= 0 && y < this.#config.size.chunkDepth &&
-            z >= 0 && z < this.#config.size.chunkWidth
-        );
-    }
-
-    /**
-     * Checks wether a block is visible or not.
-     * 
-     * - Verify occlusion culling.
-     *
-     * @param x - x-coordinate within the chunk.
-     * @param y - y-coordinate within the chunk.
-     * @param z - z-coordinate within the chunk.
-     * @returns `true` if block is visible, `false` otherwise.
-     */
-    isBlockVisible(x: number, y: number, z: number): boolean {
-        return this.#testOcclusionCulling(x, y, z);
-    }
-
-    isBlockTransparent(blockType: BlockType): boolean {
-        const blockData = this.getBlockData(blockType);
-        return (!blockData) || (blockData.opacity !== undefined && blockData.opacity < 1);
-    }
-
-    getBlockData(blockType: BlockType): BlockData | undefined {
-        const blocks = getBlocks();
-        return blocks[blockType];
-    }
-
-    /**
-     * Test wether a block is exposed or not (occlusion culling).
-     * 
-     * - Retrieves all its neighbor to determine if a face is exposed.
-     * - No neighbor on a side means face is visible.
-     * - Any transparent neighbor on a side means it is visible as well.
-     * 
-     * @param x - x-coordinate within the chunk.
-     * @param y - y-coordinate within the chunk.
-     * @param z - z-coordinate within the chunk.
-     * @returns `true` if at least a face of a block is exposed, `false` otherwise.
-     */
-    #testOcclusionCulling(x: number, y: number, z: number): boolean {
-        const neighbors = this.getNeighbors(x, y, z);
-
-        let hasEmptyNeighbor = false;
-        let hasTransparentNeighbor = false;
-
-        for (const block of neighbors) {
-            if (block === null) {
-                continue
-            };
-
-            if (block.blockType === BlockType.Empty) {
-                hasEmptyNeighbor = true;
-                break;
-            }
-
-            if (this.isBlockTransparent(block.blockType)) {
-                hasTransparentNeighbor = true;
-                break;
-            }
-        }
-
-        return hasEmptyNeighbor || hasTransparentNeighbor;
-    }
-
-    /**
-     * Retrieves all 6 potential neighbors of a block.
-     * 
-     * - Returns an empty array if provided coordinates are out of bound.
-     * 
-     * @param x - x-coordinate within the chunk.
-     * @param y - y-coordinate within the chunk.
-     * @param z - z-coordinate within the chunk.
-     * @returns an array containing all neighbors if found.
-     */
-    getNeighbors(x: number, y: number, z: number): Array<Block | null> {
-        if (!this.isBlockInBounds(x, y, z)) return [];
-        
-        const neighbors = [
-            this.getBlock(x - 1, y, z),
-            this.getBlock(x + 1, y, z),
-            this.getBlock(x , y - 1, z),
-            this.getBlock(x , y + 1, z),
-            this.getBlock(x , y, z - 1),
-            this.getBlock(x , y, z + 1),
-        ];
-
-        const blockPosition = new Vector3(x, y, z);
-
-        if (x === 0) neighbors[0] = this.#getNeighborChunkBlock(-1, 0, blockPosition);
-        if (x === this.#config.size.chunkWidth - 1) neighbors[1] = this.#getNeighborChunkBlock(1, 0, blockPosition);
-        if (z === 0) neighbors[4] = this.#getNeighborChunkBlock(0, -1, blockPosition);
-        if (z === this.#config.size.chunkWidth - 1) neighbors[5] = this.#getNeighborChunkBlock(0, 1, blockPosition);
-
-        return neighbors;
+        return this.parent?.children.find((child) => 
+            child instanceof Chunk &&
+            child.position.x === Math.floor(blockPosition.x / chunkWidth) * chunkWidth &&
+            child.position.z === Math.floor(blockPosition.z / chunkWidth) * chunkWidth
+        ) as Chunk;
     }
 
     /**
@@ -468,6 +488,126 @@ class Chunk extends Group {
         const neighborBlockZ = offsetZ === -1 ? this.#config.size.chunkWidth - 1 : offsetZ === 1 ? 0 : blockPosition.z;
 
         return neighborChunk.getBlock(neighborBlockX, blockPosition.y, neighborBlockZ);
+    }
+
+    /**
+     * Hides a block by switching its corresponding InstancedMesh instance to the last active position and reducing the instance count.
+     *
+     * - Retreives the `InstancedMesh` for the given block's type.
+     * - Gets the matrix of the last active instance of the mesh.
+     * - Extracts its position.
+     * - Swap the instance to be removed with the last active instance.
+     * - Reduce the instance count so the former last instance is no more rendered.
+     * - Updates the instance matrix.
+     * 
+     * @param block - The `Block` to hide.
+     */
+    #hideBlockInstance(block: Block): void {
+        const mesh = this.#blockRenderer.getBlockType(block.blockType);
+
+        const lastInstanceMatrix = new Matrix4();
+        mesh.getMatrixAt(mesh.count - 1, lastInstanceMatrix);
+
+        const lastInstancePosition = new Vector3().applyMatrix4(lastInstanceMatrix);
+
+        this.setInstanceId(lastInstancePosition.x, lastInstancePosition.y, lastInstancePosition.z, block.instanceId);
+        mesh.setMatrixAt(block.instanceId, lastInstanceMatrix);
+
+        mesh.count--;
+        mesh.instanceMatrix.needsUpdate = true;
+    }
+
+    /**
+     * Initializes the chunk by setting all it's block to empty blocks.
+     */
+    #initChunk() {
+        this.blocks = Array.from({ length: this.#config.size.chunkWidth }, () =>
+            Array.from({ length: this.#config.size.chunkDepth }, () =>
+                Array.from({ length: this.#config.size.chunkWidth }, () => ({ ...EMPTY_BLOCK }))
+            )
+        );
+    }    
+    
+    /**
+    * Checks if a block is already present in the mesh for the given coordinates.
+    *
+    * @param mesh - The `InstancedMesh` containing block instances.
+    * @param x - The x-coordinate of the block.
+    * @param y - The y-coordinate of the block.
+    * @param z - The z-coordinate of the block.
+    * @returns `true` if the block is already in the mesh at given coordinates, `false` otherwise.
+    */
+    #isBlockAlreadyInMesh(mesh: InstancedMesh, x: number, y: number, z: number): boolean {
+       const matrix = new Matrix4();
+       const position = new Vector3();
+
+       for (let i = 0; i < mesh.count; i++) {
+           mesh.getMatrixAt(i, matrix);
+           position.setFromMatrixPosition(matrix);
+           if (position.x === x && position.y === y && position.z === z) {
+               return true;
+           }
+       }
+
+       return false;
+    }
+
+    /**
+     * Test wether a block is exposed or not (occlusion culling).
+     * 
+     * - Retrieves all its neighbor to determine if a face is exposed.
+     * - No neighbor on a side means face is visible.
+     * - Any transparent neighbor on a side means it is visible as well.
+     * 
+     * @param x - x-coordinate within the chunk.
+     * @param y - y-coordinate within the chunk.
+     * @param z - z-coordinate within the chunk.
+     * @returns `true` if at least a face of a block is exposed, `false` otherwise.
+     */
+    #testOcclusionCulling(x: number, y: number, z: number): boolean {
+        const neighbors = this.getNeighbors(x, y, z);
+
+        for (const neighbor of neighbors) {
+            if (!neighbor.block) continue;
+            if (neighbor.block.blockType === BlockType.Empty) return true;
+            if (BlockHelper.isTransparent(neighbor.block.blockType)) return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Updates the visibility of a block's neighbors.
+     * 
+     * This method is used after removing a block to update it's neighbors visibility as a removed block needs to reveal what it was hiding.
+     * 
+     * - It retrieves all neighbors of the block.
+     * - Ensures that each neighbor exists and is not empty.
+     * - Retrieves the chunk containing each neighbor.
+     * - Converts the neighbor's world position to local coordinates in that chunk.
+     * - Adds the block to the mesh if it is visible.
+     * 
+     * @param x - The local-x coordinate of the block to update neighbors of.
+     * @param y - The local-y coordinate of the block to update neighbors of.
+     * @param z - The local-z coordinate of the block to update neighbors of.
+     */
+    #updateNeighborsVisibility(x: number, y: number, z: number): void {
+        const neighbors = this.getNeighbors(x, y, z); 
+
+        for (const neighbor of neighbors) {
+
+            if (!neighbor.block || neighbor.block.blockType === BlockType.Empty) continue;
+            
+            const neighborChunk = this.#getChunkContainingBlock(neighbor.worldPosition);
+
+            if (!neighborChunk) continue;
+
+            const neighborLocalPosition = neighborChunk.worldToLocal(neighbor.worldPosition)
+
+            if (neighborChunk.isBlockVisible(neighborLocalPosition.x, neighborLocalPosition.y, neighborLocalPosition.z)) {
+                neighborChunk.#addBlockToMesh(neighborLocalPosition.x, neighborLocalPosition.y, neighborLocalPosition.z)
+            }            
+        }
     }
 
     /**
