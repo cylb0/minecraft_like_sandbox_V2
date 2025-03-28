@@ -96,26 +96,26 @@ class Chunk extends Group {
      * @param x - x-coordinate within the chunk.
      * @param y - y-coordinate within the chunk.
      * @param z - z-coordinate within the chunk.
-     * @returns an array containing all neighbors if found.
+     * @returns an array containing all neighbors if found as well as their world position.
      */
-    getNeighbors(x: number, y: number, z: number): Array<Block | null> {
+    getNeighbors(x: number, y: number, z: number): Array<{ block: Block | null; worldPosition: Vector3 }> {
         if (!this.isBlockInBounds(x, y, z)) return [];
         
         const neighbors = [
-            this.getBlock(x - 1, y, z),
-            this.getBlock(x + 1, y, z),
-            this.getBlock(x , y - 1, z),
-            this.getBlock(x , y + 1, z),
-            this.getBlock(x , y, z - 1),
-            this.getBlock(x , y, z + 1),
+            { block: this.getBlock(x - 1, y, z), worldPosition: new Vector3(this.position.x + x - 1, this.position.y + y, this.position.z + z) },
+            { block: this.getBlock(x + 1, y, z), worldPosition: new Vector3(this.position.x + x + 1, this.position.y + y, this.position.z + z)},
+            { block: this.getBlock(x , y - 1, z), worldPosition: new Vector3(this.position.x + x, this.position.y + y - 1, this.position.z + z) },
+            { block: this.getBlock(x , y + 1, z), worldPosition: new Vector3(this.position.x + x, this.position.y + y + 1, this.position.z + z) },
+            { block: this.getBlock(x , y, z - 1), worldPosition: new Vector3(this.position.x + x, this.position.y + y, this.position.z + z - 1) },
+            { block: this.getBlock(x , y, z + 1), worldPosition: new Vector3(this.position.x + x, this.position.y + y, this.position.z + z + 1) }
         ];
 
         const blockPosition = new Vector3(x, y, z);
 
-        if (x === 0) neighbors[0] = this.#getNeighborChunkBlock(-1, 0, blockPosition);
-        if (x === this.#config.size.chunkWidth - 1) neighbors[1] = this.#getNeighborChunkBlock(1, 0, blockPosition);
-        if (z === 0) neighbors[4] = this.#getNeighborChunkBlock(0, -1, blockPosition);
-        if (z === this.#config.size.chunkWidth - 1) neighbors[5] = this.#getNeighborChunkBlock(0, 1, blockPosition);
+        if (x === 0) neighbors[0].block = this.#getNeighborChunkBlock(-1, 0, blockPosition);
+        if (x === this.#config.size.chunkWidth - 1) neighbors[1].block = this.#getNeighborChunkBlock(1, 0, blockPosition);
+        if (z === 0) neighbors[4].block = this.#getNeighborChunkBlock(0, -1, blockPosition);
+        if (z === this.#config.size.chunkWidth - 1) neighbors[5].block = this.#getNeighborChunkBlock(0, 1, blockPosition);
 
         return neighbors;
     }
@@ -479,10 +479,10 @@ class Chunk extends Group {
     #testOcclusionCulling(x: number, y: number, z: number): boolean {
         const neighbors = this.getNeighbors(x, y, z);
 
-        for (const block of neighbors) {
-            if (!block) continue;
-            if (block.blockType === BlockType.Empty) return true;
-            if (this.isBlockTransparent(block.blockType)) return true;
+        for (const neighbor of neighbors) {
+            if (!neighbor.block) continue;
+            if (neighbor.block.blockType === BlockType.Empty) return true;
+            if (this.isBlockTransparent(neighbor.block.blockType)) return true;
         }
 
         return false;
