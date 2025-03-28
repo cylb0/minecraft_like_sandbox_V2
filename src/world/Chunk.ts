@@ -1,8 +1,8 @@
-import { EMPTY_BLOCK, getBlocks, getOres} from "@/constants/block";
+import { EMPTY_BLOCK, getOres} from "@/constants/block";
 import BlockHelper from "@/helpers/BlockHelper";
 import BlockRenderer from "@/helpers/BlockRenderer";
 import PseudoRandomGenerator from "@/helpers/PseudoRandomGenerator";
-import { Block, BlockData, BlockType, DistributionType } from "@/types/Blocks";
+import { Block, BlockType, DistributionType } from "@/types/Blocks";
 import { WorldConfig } from "@/types/Config";
 import { Group, InstancedMesh, Matrix4, Vector3 } from "three";
 
@@ -82,11 +82,6 @@ class Chunk extends Group {
             return this.blocks[x][y][z];
         } 
         return null;
-    }
-
-    getBlockData(blockType: BlockType): BlockData | undefined {
-        const blocks = getBlocks();
-        return blocks[blockType];
     }
 
     /**
@@ -171,20 +166,14 @@ class Chunk extends Group {
     removeBlock(x: number, y: number, z: number): void {
         if (this.isBlockInBounds(x, y, z)) {
             const block = this.getBlock(x, y, z);
-            if (block === null || block.blockType === BlockType.Empty) return;
 
-            const instanceId = block.instanceId;
-            const blockType = block.blockType;
+            if (block === null || !BlockHelper.isDestroyable(block.blockType)) return;
 
-            const mesh = this.#blockRenderer.getBlockType(blockType);
-            mesh.count--;
-
-            const matrix = new Matrix4();
-            matrix.setPosition(0, -1, 0);
-            mesh.setMatrixAt(instanceId, matrix);
-            mesh.instanceMatrix.needsUpdate = true;
+            this.#hideBlockInstance(block);
 
             this.blocks[x][y][z] = EMPTY_BLOCK;
+
+            this.#updateNeighborsVisibility(x, y, z);
         }
     }
 
