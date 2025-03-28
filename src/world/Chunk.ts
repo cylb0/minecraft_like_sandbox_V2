@@ -1,4 +1,5 @@
 import { EMPTY_BLOCK, getBlocks, getOres} from "@/constants/block";
+import BlockHelper from "@/helpers/BlockHelper";
 import BlockRenderer from "@/helpers/BlockRenderer";
 import PseudoRandomGenerator from "@/helpers/PseudoRandomGenerator";
 import { Block, BlockData, BlockType, DistributionType } from "@/types/Blocks";
@@ -147,11 +148,6 @@ class Chunk extends Group {
      */
     isBlockVisible(x: number, y: number, z: number): boolean {
         return this.#testOcclusionCulling(x, y, z);
-    }
-
-    isBlockTransparent(blockType: BlockType): boolean {
-        const blockData = this.getBlockData(blockType);
-        return (!blockData) || (blockData.opacity !== undefined && blockData.opacity < 1);
     }
 
     /**
@@ -482,7 +478,7 @@ class Chunk extends Group {
         for (const neighbor of neighbors) {
             if (!neighbor.block) continue;
             if (neighbor.block.blockType === BlockType.Empty) return true;
-            if (this.isBlockTransparent(neighbor.block.blockType)) return true;
+            if (BlockHelper.isTransparent(neighbor.block.blockType)) return true;
         }
 
         return false;
