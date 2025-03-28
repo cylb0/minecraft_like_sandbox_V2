@@ -501,6 +501,30 @@ class Chunk extends Group {
                 Array.from({ length: this.#config.size.chunkWidth }, () => ({ ...EMPTY_BLOCK }))
             )
         );
+    }    
+    
+    /**
+    * Checks if a block is already present in the mesh for the given coordinates.
+    *
+    * @param mesh - The `InstancedMesh` containing block instances.
+    * @param x - The x-coordinate of the block.
+    * @param y - The y-coordinate of the block.
+    * @param z - The z-coordinate of the block.
+    * @returns `true` if the block is already in the mesh at given coordinates, `false` otherwise.
+    */
+    #isBlockAlreadyInMesh(mesh: InstancedMesh, x: number, y: number, z: number): boolean {
+       const matrix = new Matrix4();
+       const position = new Vector3();
+
+       for (let i = 0; i < mesh.count; i++) {
+           mesh.getMatrixAt(i, matrix);
+           position.setFromMatrixPosition(matrix);
+           if (position.x === x && position.y === y && position.z === z) {
+               return true;
+           }
+       }
+
+       return false;
     }
 
     /**
