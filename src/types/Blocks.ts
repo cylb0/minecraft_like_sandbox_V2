@@ -43,6 +43,7 @@ export interface BlockData {
     color?: ColorRepresentation;
     opacity?: number;
     solid?: boolean;
+    hardness: number;
 };
 
 /**
