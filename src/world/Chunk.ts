@@ -425,6 +425,22 @@ class Chunk extends Group {
     }
 
     /**
+     * Finds the chunk containing a given block based on its world position.
+     * 
+     * @param blockPosition - The position of the block to retrieve chunk of. 
+     * @returns A `Chunk` or `undefined` if not found.
+     */
+    #getChunkContainingBlock(blockPosition: Vector3): Chunk {
+        const chunkWidth = this.#config.size.chunkWidth;
+
+        return this.parent?.children.find((child) => 
+            child instanceof Chunk &&
+            child.position.x === Math.floor(blockPosition.x / chunkWidth) * chunkWidth &&
+            child.position.z === Math.floor(blockPosition.z / chunkWidth) * chunkWidth
+        ) as Chunk;
+    }
+
+    /**
      * Looks for the neighbor of a given block in the adjacent chunk.
      * 
      * @param offsetX - The x-offset in world grid relative to the given block's chunk.
