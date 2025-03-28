@@ -450,6 +450,33 @@ class Chunk extends Group {
     }
 
     /**
+     * Hides a block by switching its corresponding InstancedMesh instance to the last active position and reducing the instance count.
+     *
+     * - Retreives the `InstancedMesh` for the given block's type.
+     * - Gets the matrix of the last active instance of the mesh.
+     * - Extracts its position.
+     * - Swap the instance to be removed with the last active instance.
+     * - Reduce the instance count so the former last instance is no more rendered.
+     * - Updates the instance matrix.
+     * 
+     * @param block - The `Block` to hide.
+     */
+    #hideBlockInstance(block: Block): void {
+        const mesh = this.#blockRenderer.getBlockType(block.blockType);
+
+        const lastInstanceMatrix = new Matrix4();
+        mesh.getMatrixAt(mesh.count - 1, lastInstanceMatrix);
+
+        const lastInstancePosition = new Vector3().applyMatrix4(lastInstanceMatrix);
+
+        this.setInstanceId(lastInstancePosition.x, lastInstancePosition.y, lastInstancePosition.z, block.instanceId);
+        mesh.setMatrixAt(block.instanceId, lastInstanceMatrix);
+
+        mesh.count--;
+        mesh.instanceMatrix.needsUpdate = true;
+    }
+
+    /**
      * Initializes the chunk by setting all it's block to empty blocks.
      */
     #initChunk() {
