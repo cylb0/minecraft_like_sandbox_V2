@@ -7,6 +7,7 @@ import { epsilonSign } from "@/helpers/MathUtils";
 import { PLAYER_DIMENSIONS, PLAYER_MAX_VELOCITY_Y } from "@/constants/player";
 import { getBlockBoundingBox, getBlockRange, isBlockSolid, sortCollisionsByOverlap } from "@/helpers/PhysicsHelper";
 import { DEFAULT_GRAVITY } from "@/constants/world";
+import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
 
 class Physics {
     #helpers = new Group();
@@ -147,7 +148,33 @@ class Physics {
         }
 
         this.#resolveCollision(player, collisions);
+
+        let isGrounded = false
+        for (const collision of collisions) {
+            if (this.#isGroundBlock(player, collision)) {
+                isGrounded = true;
+                break;
+            }
+        }
+
+        player.setIsGrounded(isGrounded)
+
         return true;
+    }
+
+    /**
+     * Checks wether a given block is the ground block directly below player.
+     * 
+     * @param player - The player object.
+     * @param box - The `Box3` representing the block.
+     * @returns `true` if the player is standing on that block, `false` otherwise.
+     */
+    #isGroundBlock(player: Player, box: Box3): boolean {
+        const boxCenter = box.getCenter(new Vector3());
+        const x = Math.round(player.position.x)
+        const y = player.position.y - PLAYER_DIMENSIONS.height / 2 - DEFAULT_BLOCK_SIZE / 2
+        const z = Math.round(player.position.z)
+        return boxCenter.equals(new Vector3(x, y, z))
     }
 
     /**

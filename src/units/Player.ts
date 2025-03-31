@@ -22,7 +22,7 @@ class Player extends Group implements IMovable {
 
     #keys: { [key: string]: boolean } = {};
 
-    #baseSpeed: number = 5;
+    #baseSpeed: number = 4;
     #isGrounded = false;
     #movementDirection: Vector3 = new Vector3()
     #velocity: Vector3 = new Vector3();
