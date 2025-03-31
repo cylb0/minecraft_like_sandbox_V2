@@ -43,6 +43,14 @@ class World extends Group {
     }
 
     /**
+     * Updates the world.
+     */
+    update(): void {
+        this.sunLight?.update();
+        this.moonLight?.update();
+    }
+
+    /**
      * Setups lighting on the scene.
      * 
      * - Creates indirect lighting, making everything uniformly lit.
