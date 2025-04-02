@@ -8,6 +8,7 @@ import MoonLight from "@/world/lights/MoonLight";
 import AstralLight from "@/world/lights/AstralLight";
 import { Block } from "@/types/Blocks";
 import { modulo } from "@/helpers/MathUtils";
+import CoordsHelper from "@/helpers/CoordsHelper";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
@@ -126,17 +127,17 @@ class World extends Group {
      * @returns 
      */
     getBlock(worldX: number, worldY: number, worldZ: number): Block | null {
-        const { x: chunkX, z: chunkZ } = this.#getChunkPosition(worldX, worldZ);
+        const { xIndex, zIndex } = CoordsHelper.worldToChunkCoords(worldX, worldZ, this.config.size.chunkWidth);
 
-        const chunkKey = `${chunkX},${chunkZ}`;
+        const chunkKey = `${xIndex},${zIndex}`;
         let chunk = this.#bufferedChunks.get(chunkKey);
 
         if (!chunk) {
-            chunk = this.#generateChunk(chunkX, chunkZ);
+            chunk = this.#generateChunk(xIndex, zIndex);
             this.#bufferedChunks.set(chunkKey, chunk);
         }
 
-        const { x: localX, y: localY, z: localZ } = this.#getLocalPosition(worldX, worldY, worldZ);
+        const { x: localX, y: localY, z: localZ } = CoordsHelper.worldToLocalCoords(worldX, worldY, worldZ, this.config.size.chunkWidth);
 
         return chunk.getBlock(localX, localY, localZ);
     }
@@ -149,10 +150,13 @@ class World extends Group {
      * @returns A `Vector3` free position.
      */
     findSpawnPosition(worldX: number, worldZ: number): Vector3 {
-        const chunk = this.#getOrCreateChunk(worldX, worldZ);
-        const { x: localX, z: localZ } = this.#getLocalPosition(worldX, 0, worldZ);
+        const { xIndex, zIndex } = CoordsHelper.worldToChunkCoords(worldX, worldZ, this.config.size.chunkWidth);
 
-        const hightestY = chunk.findHighestEmptyBlock(localX, localZ);
+        const chunk = this.#getOrCreateChunk(xIndex, zIndex);
+
+        const { x, y, z} = CoordsHelper.worldToLocalCoords(worldX, 0, worldZ, this.config.size.chunkWidth);
+
+        const hightestY = chunk.findHighestEmptyBlock(x, y);
 
         return new Vector3(worldX, hightestY, worldZ);
     }
@@ -170,8 +174,7 @@ class World extends Group {
      */
     removeBlock(worldX: number, worldY: number, worldZ: number): void {
         const chunk = this.#getOrCreateChunk(worldX, worldZ);
-        console.log('chunk position', chunk.position)
-        const { x, y, z } = this.#getLocalPosition(worldX, worldY, worldZ);
+        const { x, y, z } = CoordsHelper.worldToLocalCoords(worldX, worldY, worldZ, this.config.size.chunkWidth);
 
         return chunk.removeBlock(x, y, z);
     }
@@ -198,53 +201,23 @@ class World extends Group {
     }
 
     /**
-     * Retrieves chunk coordinates based on global worldX and worldZ coordinates.
-     * 
-     * @param worldX - World x-coordinate.
-     * @param worldZ - World z-coordinate.
-     * @returns An object containing chunk's coordinates in world grid.
-     */
-    #getChunkPosition(worldX: number, worldZ: number): { x: number, z: number } {
-        return {
-            x: Math.floor(worldX / this.config.size.chunkWidth),
-            z: Math.floor(worldZ / this.config.size.chunkWidth),
-        };
-    }
-
-    /**
      * Retrieves an existing chunk by its position or generates a new one if missing.
      * 
      * @param worldX - World x-coordinate.
      * @param worldZ - World z-coordinate.
      */
     #getOrCreateChunk(worldX: number, worldZ: number): Chunk {
-        const { x: chunkX, z: chunkZ } = this.#getChunkPosition(worldX, worldZ);
+        const { xIndex, zIndex } = CoordsHelper.worldToChunkCoords(worldX, worldZ, this.config.size.chunkWidth);
 
-        const chunkKey = `${chunkX},${chunkZ}`;
+        const chunkKey = `${xIndex},${zIndex}`;
         let chunk = this.#bufferedChunks.get(chunkKey);
 
         if (!chunk) {
-            chunk = this.#generateChunk(chunkX, chunkZ);
+            chunk = this.#generateChunk(xIndex, zIndex);
             this.#bufferedChunks.set(chunkKey, chunk);
         }
 
         return chunk;
-    }
-
-    /**
-     * Transform world coordinates into local chunk coordinates.
-     * 
-     * @param worldX - World x-coordinate.
-     * @param worldY - World y-coordinate.
-     * @param worldZ - World z-coordinate.
-     * @returns Local coordinates within a chunk.
-     */
-    #getLocalPosition(worldX: number, worldY: number, worldZ: number): { x: number, y: number, z: number } {
-        return { 
-            x: modulo(worldX, this.config.size.chunkWidth),
-            y: modulo(worldY, this.config.size.chunkDepth),
-            z: modulo(worldZ, this.config.size.chunkWidth),
-        };
     }
 
     /**

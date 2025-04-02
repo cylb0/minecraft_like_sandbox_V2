@@ -12,10 +12,9 @@ import { Box3, Vector3 } from "three";
  * @returns A Box3 object for the block.
  */
 export function getBlockBoundingBox(x: number, y: number, z: number): Box3 {
-    const halfBlock = DEFAULT_BLOCK_SIZE / 2;
     return new Box3(
-        new Vector3(x - halfBlock, y - halfBlock, z - halfBlock),
-        new Vector3(x + halfBlock, y + halfBlock, z + halfBlock)
+        new Vector3(x, y, z),
+        new Vector3(x + DEFAULT_BLOCK_SIZE, y + DEFAULT_BLOCK_SIZE, z + DEFAULT_BLOCK_SIZE)
     );
 };
 
@@ -24,16 +23,16 @@ export function getBlockBoundingBox(x: number, y: number, z: number): Box3 {
  * @param box - An axis-aligned bounding box in world coordinates.
  * @returns An object containing min and max block coordinates on each axis.
  */
-export function getBlockRange(box: Box3) {
+export function getCollisionRange(box: Box3) {
     return {
         minX: Math.floor(box.min.x),
-        maxX: Math.ceil(box.max.x),
-        minY: Math.floor(box.min.y),
+        maxX: Math.floor(box.max.x),
+        minY: Math.floor(box.min.y - 1),
         maxY: Math.ceil(box.max.y),
         minZ: Math.floor(box.min.z),
-        maxZ: Math.ceil(box.max.z),
-    };
-};
+        maxZ: Math.floor(box.max.z),
+    }
+}
 
 /**
  * Sorts collisions based on the smallest overlap axis with the player.
