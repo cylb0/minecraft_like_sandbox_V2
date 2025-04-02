@@ -86,12 +86,19 @@ class Physics {
         const playerBox = player.boundingBox
         for (const position of candidates) {
             const blockBox = getBlockBoundingBox(position.x, position.y, position.z)
-            if (playerBox.intersectsBox(blockBox)) {
-                collisions.push(blockBox)
-                if (helper) {
-                    const boxHelper = new Box3Helper(blockBox, 0xffff00)
-                    this.#helpers.add(boxHelper)
-                }
+            if (!playerBox.intersectsBox(blockBox)) continue;
+
+            const overlap = this.#computeOverlap(playerBox, blockBox);
+            if (!overlap) continue;
+
+            const overlapAxes = [overlap.x > 0, overlap.y > 0, overlap.z > 0].filter(Boolean).length;
+            if (overlapAxes < 2) continue;
+
+            collisions.push(blockBox);
+
+            if (helper) {
+                const boxHelper = new Box3Helper(blockBox, 0xffff00);
+                this.#helpers.add(boxHelper);
             }
         }
         return collisions
@@ -122,6 +129,7 @@ class Physics {
                         block.blockType === BlockType.Empty ||
                         !isBlockSolid(block.blockType)
                     ) continue;
+                    
                     candidates.push(new Vector3(x, y, z))
                 }
             }
@@ -140,7 +148,7 @@ class Physics {
         const playerBox = player.boundingBox;
         const range = getBlockRange(playerBox);
         const candidates = this.#getSolidBlocksPositionInRange(range, world);
-        const collisions = this.#getCollisions(candidates, player)
+        const collisions = this.#getCollisions(candidates, player, true)
 
         if (collisions.length === 0) {
             player.setIsGrounded(false);
