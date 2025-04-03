@@ -7,7 +7,7 @@ import SunLight from "@/world/lights/SunLight";
 import MoonLight from "@/world/lights/MoonLight";
 import AstralLight from "@/world/lights/AstralLight";
 import { Block } from "@/types/Blocks";
-import { modulo } from "@/helpers/MathUtils";
+import CoordsHelper from "@/helpers/CoordsHelper";
 
 /**
  * Represents the game world, manages chunks, terrain, lighting and scene elements.
@@ -29,6 +29,8 @@ class World extends Group {
 
     #bufferedChunks: Map<string, Chunk> = new Map();
 
+    #previousPlayerChunkPosition = '';
+
     /**
      * Creates a new World instance.
      *
@@ -40,6 +42,33 @@ class World extends Group {
         this.seed = seed;
         this.config = config;
         this.clock = new Clock(this.config.dayDurationInSeconds);
+    }
+
+    /**
+     * Updates the world.
+     * 
+     * It performs different actions.
+     * - Determines the player's current chunk based on its position.
+     * - If player has moved to a new chunk since last update it:
+     * Buffers nearby chunks and updates rendering (loading / unloading chunks to the scene).
+     * Updates the `#previousPlayerChunkPosition` to the current chunk.
+     * - Updates the astral lights.
+     * 
+     * @param playerPosition - The player's current position.
+     */
+    update(playerPosition: Vector3): void {
+        const { xIndex, zIndex } = CoordsHelper.worldToChunkCoords(playerPosition.x, playerPosition.z, this.config.size.chunkWidth);
+
+        const chunkKey = `${xIndex},${zIndex}`;
+
+        if (chunkKey !== this.#previousPlayerChunkPosition) {
+            this.#bufferedChunks = this.#getNearbyChunks(playerPosition);
+            this.updateChunksRendering();
+            this.#previousPlayerChunkPosition = chunkKey
+        }
+
+        this.sunLight?.update(playerPosition);
+        this.moonLight?.update(playerPosition);
     }
 
     /**
@@ -78,31 +107,39 @@ class World extends Group {
     }
 
     /**
-     * Generates the world by creating and adding chunks within a render radius.
+     * Generates the world.
      * 
-     * - Generates chunks within `renderRadius + 1` because chunks will need access to outer chunk data for occlusion rendering.
-     * - Saves chunks in a Map for further access.
+     * - Dispose of previous world if needed.
      * - Adds lighting.
-     * - Chunks are added to the scene even when empty.
      */
     generate() {
         this.dispose();
 
-        const renderRadius = this.config.size.renderRadius + 1;
+        this.addLighting();
+    }
 
-        for (let x = -renderRadius; x <= renderRadius; x++) {
-            for (let z = -renderRadius; z <= renderRadius; z++) {
+    /**
+     * Determines all chunks around player's current position within a given radius.
+     * 
+     * - It retrieves chunks if they're already buffered and creates them otherwise.
+     * - It then updates `this.#bufferedChunks` with newly added chunks.
+     * 
+     * @param playerPosition - The position to retrieve chunks around.
+     */
+    #getNearbyChunks(playerPosition: Vector3): Map<string, Chunk> {
+        const { xIndex, zIndex } = CoordsHelper.worldToChunkCoords(playerPosition.x, playerPosition.z, this.config.size.chunkWidth);
+        const renderRadius = this.config.size.renderRadius;
+
+        const nearbyChunks = new Map<string, Chunk>();
+        for (let x = xIndex - renderRadius; x <= xIndex + renderRadius; x++) {
+            for (let z = zIndex - renderRadius; z <= zIndex + renderRadius; z++) {
                 const chunkKey = `${x},${z}`;
-                const chunk = this.#generateChunk(x, z);
-                this.#bufferedChunks.set(chunkKey, chunk);
-                this.add(chunk);
-                chunk.visible = false;
+                const chunk = this.#getOrCreateChunk(x, z);
+                nearbyChunks.set(chunkKey, chunk);
             }
         }
-        
-        this.addLighting();
 
-        this.updateChunksRendering();
+        return nearbyChunks;
     }
 
     /**
@@ -118,17 +155,17 @@ class World extends Group {
      * @returns 
      */
     getBlock(worldX: number, worldY: number, worldZ: number): Block | null {
-        const { x: chunkX, z: chunkZ } = this.#getChunkPosition(worldX, worldZ);
+        const { xIndex, zIndex } = CoordsHelper.worldToChunkCoords(worldX, worldZ, this.config.size.chunkWidth);
 
-        const chunkKey = `${chunkX},${chunkZ}`;
+        const chunkKey = `${xIndex},${zIndex}`;
         let chunk = this.#bufferedChunks.get(chunkKey);
 
         if (!chunk) {
-            chunk = this.#generateChunk(chunkX, chunkZ);
+            chunk = this.#generateChunk(xIndex, zIndex);
             this.#bufferedChunks.set(chunkKey, chunk);
         }
 
-        const { x: localX, y: localY, z: localZ } = this.#getLocalPosition(worldX, worldY, worldZ);
+        const { x: localX, y: localY, z: localZ } = CoordsHelper.worldToLocalCoords(worldX, worldY, worldZ, this.config.size.chunkWidth);
 
         return chunk.getBlock(localX, localY, localZ);
     }
@@ -141,10 +178,13 @@ class World extends Group {
      * @returns A `Vector3` free position.
      */
     findSpawnPosition(worldX: number, worldZ: number): Vector3 {
-        const chunk = this.#getOrCreateChunk(worldX, worldZ);
-        const { x: localX, z: localZ } = this.#getLocalPosition(worldX, 0, worldZ);
+        const { xIndex, zIndex } = CoordsHelper.worldToChunkCoords(worldX, worldZ, this.config.size.chunkWidth);
 
-        const hightestY = chunk.findHighestEmptyBlock(localX, localZ);
+        const chunk = this.#getOrCreateChunk(xIndex, zIndex);
+
+        const { x, y, z} = CoordsHelper.worldToLocalCoords(worldX, 0, worldZ, this.config.size.chunkWidth);
+
+        const hightestY = chunk.findHighestEmptyBlock(x, y);
 
         return new Vector3(worldX, hightestY, worldZ);
     }
@@ -161,82 +201,62 @@ class World extends Group {
      * @param worldZ - World z-coordinate.
      */
     removeBlock(worldX: number, worldY: number, worldZ: number): void {
-        const chunk = this.#getOrCreateChunk(worldX, worldZ);
-        console.log('chunk position', chunk.position)
-        const { x, y, z } = this.#getLocalPosition(worldX, worldY, worldZ);
+        const { xIndex, zIndex } = CoordsHelper.worldToChunkCoords(worldX, worldZ, this.config.size.chunkWidth);
+        const chunk = this.#getOrCreateChunk(xIndex, zIndex);
+        const { x, y, z } = CoordsHelper.worldToLocalCoords(worldX, worldY, worldZ, this.config.size.chunkWidth);
 
         return chunk.removeBlock(x, y, z);
     }
 
     /**
      * Renders all chunks within `renderRadius` distance.
-     */
-    updateChunksRendering() {
-        const renderRadius = this.config.size.renderRadius;
-
-        for (let x = -renderRadius; x <= renderRadius; x++) {
-            for (let z = -renderRadius; z <= renderRadius; z++) {
-                const chunkKey = `${x},${z}`;
-                const chunk = this.#bufferedChunks.get(chunkKey);
-
-                if (chunk) {
-                    chunk.visible = true;
-                    chunk.render();
-                }
-
-                this.#generateChunk(x, z);
-            }
-        }
-    }
-
-    /**
-     * Retrieves chunk coordinates based on global worldX and worldZ coordinates.
      * 
-     * @param worldX - World x-coordinate.
-     * @param worldZ - World z-coordinate.
-     * @returns An object containing chunk's coordinates in world grid.
+     * - It traverses `this.#bufferedChunks` to render chunks that are not yet in the scene.
+     * - It then moves through `this.children` and retrieves all chunks that no longer need to be rendered.
+     * - It removes those chunks and disposes of their resources.
      */
-    #getChunkPosition(worldX: number, worldZ: number): { x: number, z: number } {
-        return {
-            x: Math.floor(worldX / this.config.size.chunkWidth),
-            z: Math.floor(worldZ / this.config.size.chunkWidth),
-        };
+    updateChunksRendering(): void {
+        this.#bufferedChunks.forEach((chunk, chunkKey) => {
+            if (!this.children.includes(chunk)) {
+                this.add(chunk);
+                chunk.render();
+            }
+        });
+
+        const chunksToRemove: Array<Chunk> = [];
+
+        this.children.forEach((child) => {
+            if (child instanceof Chunk) {
+                const { xIndex, zIndex } = CoordsHelper.worldToChunkCoords(child.position.x, child.position.z, this.config.size.chunkWidth);
+                const chunkKey = `${xIndex},${zIndex}`;
+
+                if (!this.#bufferedChunks.has(chunkKey)) {
+                    chunksToRemove.push(child)
+                }
+            }
+        })
+
+        chunksToRemove.forEach((chunk) => {
+            this.remove(chunk);
+            chunk.dispose();
+        })
     }
 
     /**
      * Retrieves an existing chunk by its position or generates a new one if missing.
      * 
-     * @param worldX - World x-coordinate.
-     * @param worldZ - World z-coordinate.
+     * @param xIndex - x-index of the chunk in world grid.
+     * @param zIndex - z-index of the chunk in world grid.
      */
-    #getOrCreateChunk(worldX: number, worldZ: number): Chunk {
-        const { x: chunkX, z: chunkZ } = this.#getChunkPosition(worldX, worldZ);
-
-        const chunkKey = `${chunkX},${chunkZ}`;
+    #getOrCreateChunk(xIndex: number, zIndex: number): Chunk {
+        const chunkKey = `${xIndex},${zIndex}`;
         let chunk = this.#bufferedChunks.get(chunkKey);
 
         if (!chunk) {
-            chunk = this.#generateChunk(chunkX, chunkZ);
+            chunk = this.#generateChunk(xIndex, zIndex);
             this.#bufferedChunks.set(chunkKey, chunk);
         }
-
         return chunk;
-    }
-
-    /**
-     * Transform world coordinates into local chunk coordinates.
-     * 
-     * @param worldX - World x-coordinate.
-     * @param worldY - World y-coordinate.
-     * @param worldZ - World z-coordinate.
-     * @returns Local coordinates within a chunk.
-     */
-    #getLocalPosition(worldX: number, worldY: number, worldZ: number): { x: number, y: number, z: number } {
-        return { 
-            x: modulo(worldX, this.config.size.chunkWidth),
-            y: modulo(worldY, this.config.size.chunkDepth),
-            z: modulo(worldZ, this.config.size.chunkWidth),
-        };
     }
 
     /**
@@ -275,7 +295,7 @@ class World extends Group {
         this.sunLight = new SunLight(
             this.clock,
             this.config.light.sunLight,
-            new Vector3(0, 0, 0),
+            // new Vector3(0, 0, 0),
             helper
         );
         this.add(this.sunLight);
@@ -292,7 +312,7 @@ class World extends Group {
         this.moonLight = new MoonLight(
             this.clock,
             this.config.light.moonLight,
-            new Vector3(0, 0, 0),
+            // new Vector3(0, 0, 0),
             helper
         );
         this.add(this.moonLight);

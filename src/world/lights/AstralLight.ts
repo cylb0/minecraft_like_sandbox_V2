@@ -8,7 +8,6 @@ import { CameraHelper, Color, DirectionalLight, MathUtils, Mesh, MeshBasicMateri
  */
 abstract class AstralLight extends DirectionalLight {
     #angle!: number;
-    protected center: Vector3;
     protected clock: Clock;
     protected config: AstralLightConfig;
     shadowHelper: CameraHelper | null = null;
@@ -28,7 +27,6 @@ abstract class AstralLight extends DirectionalLight {
     constructor(
         clock: Clock,
         config: AstralLightConfig,
-        center: Vector3,
         helper: boolean
     ) {
         super(config.defaultColor, config.defaultIntensity);
@@ -38,16 +36,12 @@ abstract class AstralLight extends DirectionalLight {
         this.#mesh = this.createMesh();
         this.add(this.#mesh);
 
-        this.center = center;
-
         this.#initShadows();
         
         if (helper) {
             this.shadowHelper = new CameraHelper(this.shadow.camera);
             this.add(this.shadowHelper);
         }
-
-        this.update();
     }
 
     protected abstract createMesh(): Mesh;
@@ -58,11 +52,11 @@ abstract class AstralLight extends DirectionalLight {
      * - Computes the new angle based on the time of day.
      * - Updates the light's position.
      */
-    update() {
+    update(playerPosition: Vector3) {
         const inGameTime = this.clock.getInGameTimeInHours();
         this.#updateAngle(inGameTime);
 
-        this.#updatePosition();
+        this.#updatePosition(playerPosition);
         this.#updateColorAndIntensity(inGameTime);
     }
 
@@ -84,23 +78,27 @@ abstract class AstralLight extends DirectionalLight {
     /**
      * Updates the position of the light source based on it's current angle, radius and rotation center.
      */
-    #updatePosition(): void {
-        const newPosition = computeOrbitPosition(this.center, this.config.radius, this.angle);
+    #updatePosition(playerPosition: Vector3): void {
+        const newPosition = computeOrbitPosition(new Vector3(), this.config.radius, this.angle);
+        newPosition.add(playerPosition);
         this.position.copy(newPosition);
         
         this.shadow.camera.position.copy(this.position);
         this.shadow.camera.updateProjectionMatrix();
         this.shadow.camera.updateMatrixWorld();
 
-        this.#updateMeshPosition();
+        this.#updateMeshPosition(playerPosition);
     }
 
     /**
      * Updates the mesh's position and orientation to match lights properties.
      */
-    #updateMeshPosition(): void {
-        this.#mesh?.position.copy(this.shadow.camera.position);
-        this.#mesh?.rotation.copy(this.shadow.camera.rotation);
+    #updateMeshPosition(playerPosition: Vector3): void {
+        if (this.#mesh) {
+            const meshPosition = computeOrbitPosition(new Vector3(), this.config.radius, this.angle);
+            this.#mesh.position.copy(meshPosition);
+            this.#mesh.lookAt(playerPosition);
+        }
     }
 
     /**

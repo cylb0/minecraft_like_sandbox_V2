@@ -4,10 +4,9 @@ import World from "@/world/World";
 import { Box3Helper } from "three";
 import { Box3, Group, Scene, Vector3 } from "three";
 import { epsilonSign } from "@/helpers/MathUtils";
-import { PLAYER_DIMENSIONS, PLAYER_MAX_VELOCITY_Y } from "@/constants/player";
-import { getBlockBoundingBox, getBlockRange, isBlockSolid, sortCollisionsByOverlap } from "@/helpers/PhysicsHelper";
+import { PLAYER_MAX_VELOCITY_Y } from "@/constants/player";
+import { getBlockBoundingBox, getCollisionRange, isBlockSolid, sortCollisionsByOverlap } from "@/helpers/PhysicsHelper";
 import { DEFAULT_GRAVITY } from "@/constants/world";
-import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
 
 class Physics {
     #helpers = new Group();
@@ -22,8 +21,6 @@ class Physics {
      * - Applies gravity to the player's y-axis velocity.
      * - Moves the player based on his current velocity (gravity + inputs).
      * - Checks and resolves collisions with nearby blocks.
-     * - Performs multiple iterations to account for corrections that might introduce new collisions.
-     * - Exits early from iterations if an iteration didn't resolve any collision.
      * 
      * @param player - The `Player` to apply physics to.
      * @param world - The `World` object containing blocks.
@@ -31,20 +28,14 @@ class Physics {
      */
     update(player: Player, world: World, delta: number): void {
         this.#helpers.clear();
-    
-        this.#applyGravity(player, delta);
-    
+
+        if (!player.isGrounded) {
+            this.#applyGravity(player, delta);
+        }
+
         player.move(delta);
 
-        let iterations = 0
-        const maxIterations = 3
-
-        do {
-            const resolved = this.#handleCollisions(player, world);
-            if (!resolved) break;
-            iterations++;
-        } while (iterations < maxIterations);
-
+        this.#handleCollisions(player, world)
     }
 
     /**
@@ -54,10 +45,8 @@ class Physics {
      * @param delta - The amount of time passed since last render.
      */
     #applyGravity(player: Player, delta: number): void {
-        if (!player.isGrounded) {
-            player.velocity.y -= DEFAULT_GRAVITY * delta;
-            player.velocity.y = Math.max(player.velocity.y, PLAYER_MAX_VELOCITY_Y)
-        }
+        player.velocity.y -= DEFAULT_GRAVITY * delta;
+        player.velocity.y = Math.max(player.velocity.y, PLAYER_MAX_VELOCITY_Y)
     }
 
     /**
@@ -86,12 +75,19 @@ class Physics {
         const playerBox = player.boundingBox
         for (const position of candidates) {
             const blockBox = getBlockBoundingBox(position.x, position.y, position.z)
-            if (playerBox.intersectsBox(blockBox)) {
-                collisions.push(blockBox)
-                if (helper) {
-                    const boxHelper = new Box3Helper(blockBox, 0xffff00)
-                    this.#helpers.add(boxHelper)
-                }
+            if (!playerBox.intersectsBox(blockBox)) continue;
+
+            const overlap = this.#computeOverlap(playerBox, blockBox);
+            if (!overlap) continue;
+
+            const overlapAxes = [overlap.x > 0, overlap.y > 0, overlap.z > 0].filter(Boolean).length;
+            if (overlapAxes < 2) continue;
+
+            collisions.push(blockBox);
+
+            if (helper) {
+                const boxHelper = new Box3Helper(blockBox, 0xffff00);
+                this.#helpers.add(boxHelper);
             }
         }
         return collisions
@@ -122,6 +118,7 @@ class Physics {
                         block.blockType === BlockType.Empty ||
                         !isBlockSolid(block.blockType)
                     ) continue;
+                    
                     candidates.push(new Vector3(x, y, z))
                 }
             }
@@ -138,7 +135,7 @@ class Physics {
      */
     #handleCollisions(player: Player, world: World): boolean {
         const playerBox = player.boundingBox;
-        const range = getBlockRange(playerBox);
+        const range = getCollisionRange(playerBox);
         const candidates = this.#getSolidBlocksPositionInRange(range, world);
         const collisions = this.#getCollisions(candidates, player)
 
@@ -149,10 +146,11 @@ class Physics {
 
         this.#resolveCollision(player, collisions);
 
-        let isGrounded = false
+        let isGrounded = false;
         for (const collision of collisions) {
             if (this.#isGroundBlock(player, collision)) {
                 isGrounded = true;
+                player.setIsGrounded(true)
                 break;
             }
         }
@@ -170,11 +168,7 @@ class Physics {
      * @returns `true` if the player is standing on that block, `false` otherwise.
      */
     #isGroundBlock(player: Player, box: Box3): boolean {
-        const boxCenter = box.getCenter(new Vector3());
-        const x = Math.round(player.position.x)
-        const y = player.position.y - PLAYER_DIMENSIONS.height / 2 - DEFAULT_BLOCK_SIZE / 2
-        const z = Math.round(player.position.z)
-        return boxCenter.equals(new Vector3(x, y, z))
+        return player.boundingBox.min.y === box.max.y;
     }
 
     /**
@@ -228,7 +222,7 @@ class Physics {
         
         if (correction > 0) {
             player.setIsGrounded(true);
-            player.position.y = blockBox.max.y + PLAYER_DIMENSIONS.height / 2;
+            player.position.y = blockBox.max.y;
         }
     }
 
@@ -249,19 +243,7 @@ class Physics {
             if (!overlap) continue;
 
             this.#resolveAxisCollision(player, blockBox, overlap);
-            this.#roundPlayerPosition(player);
         }
-    }
-
-    /**
-     * Rounds the player's position to prevent floating-point precision issues that cause position oscillations.
-     * 
-     * @param player - The player to adjust position of.
-     */
-    #roundPlayerPosition(player: Player): void {
-        player.position.x = Math.round(player.position.x * 1000) / 1000
-        player.position.y = Math.round(player.position.y * 1000) / 1000
-        player.position.z = Math.round(player.position.z * 1000) / 1000
     }
 }
 

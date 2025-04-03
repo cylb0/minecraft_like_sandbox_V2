@@ -47,14 +47,15 @@ class Chunk extends Group {
      * @returns the y-coordinate of the highest empty block found.
      */
     findHighestEmptyBlock(x: number, z: number): number {
-        let highestBlockY = 0;
+        const flooredX = Math.floor(x);
+        const flooredZ = Math.floor(z);
+
         for (let y = this.#config.size.chunkDepth - 1; y >= 0; y--) {
-            if (this.getBlock(x, y, z)?.blockType !== BlockType.Empty) {
-                highestBlockY = y;
-                break;
+            if (this.getBlock(flooredX, y, flooredZ)?.blockType !== BlockType.Empty) {
+                return y + 1;
             }
         }
-        return highestBlockY;
+        return 0;
     }
 
     /**
@@ -226,9 +227,11 @@ class Chunk extends Group {
 
         if (this.#isBlockAlreadyInMesh(mesh, x, y, z)) return;
 
+        const halfBlockSize = this.#config.size.blockSize / 2;
+
         const instanceId = mesh.count;
         const matrix = new Matrix4();
-        matrix.setPosition(x, y, z);
+        matrix.setPosition(x + halfBlockSize, y + halfBlockSize, z + halfBlockSize);
         mesh.setMatrixAt(instanceId, matrix);
 
         this.setInstanceId(x, y, z, instanceId);
@@ -288,6 +291,8 @@ class Chunk extends Group {
 
         const matrix = new Matrix4();
 
+        const halfBlockSize = this.#config.size.blockSize / 2;
+
         for (let x = 0; x < this.#config.size.chunkWidth; x++) {
             for (let y = 0; y < this.#config.size.chunkDepth; y++) {
                 for (let z = 0; z < this.#config.size.chunkWidth; z++) {
@@ -301,7 +306,7 @@ class Chunk extends Group {
                         const mesh = this.#blockRenderer.getBlockType(blockType);
                         const instanceId = mesh.count;
 
-                        matrix.setPosition(x, y, z);
+                        matrix.setPosition(x + halfBlockSize, y + halfBlockSize, z + halfBlockSize);
                         mesh.setMatrixAt(instanceId, matrix);
                         this.setInstanceId(x, y, z, instanceId);
                         mesh.count++;
@@ -509,10 +514,9 @@ class Chunk extends Group {
         mesh.getMatrixAt(mesh.count - 1, lastInstanceMatrix);
 
         const lastInstancePosition = new Vector3().applyMatrix4(lastInstanceMatrix);
-
-        this.setInstanceId(lastInstancePosition.x, lastInstancePosition.y, lastInstancePosition.z, block.instanceId);
+        const halfBlockSize = this.#config.size.blockSize / 2;
+        this.setInstanceId(lastInstancePosition.x - halfBlockSize, lastInstancePosition.y - halfBlockSize, lastInstancePosition.z - halfBlockSize, block.instanceId);
         mesh.setMatrixAt(block.instanceId, lastInstanceMatrix);
-
         mesh.count--;
         mesh.instanceMatrix.needsUpdate = true;
     }
@@ -529,7 +533,10 @@ class Chunk extends Group {
     }    
     
     /**
-    * Checks if a block is already present in the mesh for the given coordinates.
+    * Checks if a block is already present in the mesh for the given chunk coordinates.
+    * 
+    * - Traverse the mesh looking for an instance with position matching given coordinates.
+    * - Sub half a block size from the instance's coordinate as instances are offseted.
     *
     * @param mesh - The `InstancedMesh` containing block instances.
     * @param x - The x-coordinate of the block.
@@ -538,18 +545,24 @@ class Chunk extends Group {
     * @returns `true` if the block is already in the mesh at given coordinates, `false` otherwise.
     */
     #isBlockAlreadyInMesh(mesh: InstancedMesh, x: number, y: number, z: number): boolean {
-       const matrix = new Matrix4();
-       const position = new Vector3();
+        const matrix = new Matrix4();
+        const position = new Vector3();
+        const halfBlockSize = this.#config.size.blockSize / 2;
 
-       for (let i = 0; i < mesh.count; i++) {
-           mesh.getMatrixAt(i, matrix);
-           position.setFromMatrixPosition(matrix);
-           if (position.x === x && position.y === y && position.z === z) {
-               return true;
-           }
-       }
+        for (let i = 0; i < mesh.count; i++) {
+            mesh.getMatrixAt(i, matrix);
+            position.setFromMatrixPosition(matrix);
 
-       return false;
+            const blockX = position.x - halfBlockSize;
+            const blockY = position.y - halfBlockSize;
+            const blockZ = position.z - halfBlockSize;
+
+            if (blockX === x && blockY === y && blockZ === z) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -592,7 +605,7 @@ class Chunk extends Group {
      * @param z - The local-z coordinate of the block to update neighbors of.
      */
     #updateNeighborsVisibility(x: number, y: number, z: number): void {
-        const neighbors = this.getNeighbors(x, y, z); 
+        const neighbors = this.getNeighbors(x, y, z);
 
         for (const neighbor of neighbors) {
 
@@ -606,7 +619,7 @@ class Chunk extends Group {
 
             if (neighborChunk.isBlockVisible(neighborLocalPosition.x, neighborLocalPosition.y, neighborLocalPosition.z)) {
                 neighborChunk.#addBlockToMesh(neighborLocalPosition.x, neighborLocalPosition.y, neighborLocalPosition.z)
-            }            
+            }
         }
     }
 

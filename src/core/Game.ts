@@ -77,9 +77,8 @@ class Game {
                 this.#physics.update(this.#player, this.#world, FIXED_TIME_STEP);
                 accumulator -= FIXED_TIME_STEP
             }
-            
-            this.#world.sunLight?.update();
-            this.#world.moonLight?.update();
+
+            this.#world.update(this.#player.position);
             
             Renderer.renderer.render(GameScene.scene, Camera.camera);
 

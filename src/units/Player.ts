@@ -1,4 +1,3 @@
-import { DEFAULT_BLOCK_SIZE } from "@/constants/block";
 import { PLAYER_DIMENSIONS, PLAYER_JUMP_VELOCITY, PLAYER_MAX_BLOCKS_INTERACTION_DISTANCE, PLAYER_SPAWN_POSITION } from "@/constants/player";
 import Camera from "@/core/scene/Camera";
 import IMovable from "@/interfaces/IMovable";
@@ -23,7 +22,7 @@ class Player extends Group implements IMovable {
     #keys: { [key: string]: boolean } = {};
 
     #baseSpeed: number = 4;
-    #isGrounded = false;
+    #isGrounded = true;
     #movementDirection: Vector3 = new Vector3()
     #velocity: Vector3 = new Vector3();
 
@@ -96,9 +95,9 @@ class Player extends Group implements IMovable {
      * @returns The current axis-aligned bounding box of the object.
      */
     get boundingBox(): Box3 {
-        const currentPosition = this.position.clone();
+        const playerCenter = this.position.clone().add(new Vector3(0, PLAYER_DIMENSIONS.height / 2, 0));
         return new Box3().setFromCenterAndSize(
-            currentPosition,
+            playerCenter,
             new Vector3(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth)
         );
     }
@@ -227,7 +226,7 @@ class Player extends Group implements IMovable {
         const mode = Camera.mode;
 
         if (mode === CameraMode.FPS) {
-            this.#camera.position.set(0, PLAYER_DIMENSIONS.height / 4, 0);
+            this.#camera.position.set(0, PLAYER_DIMENSIONS.height * 3 / 4, 0);
         } else if (mode === CameraMode.TPS) {
             const offset = Camera.tpsOffset;
             this.#camera.position.set(offset.x, offset.y, offset.z);
@@ -268,7 +267,10 @@ class Player extends Group implements IMovable {
     #createPlayer(): Mesh {
         const playerGeometry = new BoxGeometry(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth);
         const playerMaterial = new MeshBasicMaterial({ color: 0x0000ff, wireframe: true });
-        return new Mesh(playerGeometry, playerMaterial);
+        const mesh = new Mesh(playerGeometry, playerMaterial);
+        mesh.position.copy(new Vector3(0, PLAYER_DIMENSIONS.height / 2, 0));
+        return mesh;
+        // return new Mesh(playerGeometry, playerMaterial);
     }
 
     /**
@@ -351,22 +353,19 @@ class Player extends Group implements IMovable {
      */
     #findSpawn(): Vector3 {
         const { x, z } = PLAYER_SPAWN_POSITION;
-        const freeSpot = this.#world.findSpawnPosition(x, z);
-
-        return freeSpot.add(this.#getPlayerPositionOffset());
+        return this.#world.findSpawnPosition(x, z);
     }
 
-    /**
-     * Computes the player Y-offset needed to calculate actual position.
-     * 
-     * - Player's position is offset by half his height.
-     * - Also includes the block Offset as its position is centered.
-     * 
-     * @returns The player's position offset.
-     */
-    #getPlayerPositionOffset(): Vector3 {
-        return new Vector3(0, (PLAYER_DIMENSIONS.height / 2) + (DEFAULT_BLOCK_SIZE / 2), 0);
-    }
+    // /**
+    //  * Computes the player Y-offset needed to calculate actual position.
+    //  * 
+    //  * - Player's position is offset by half his height.
+    //  * 
+    //  * @returns The player's position offset.
+    //  */
+    // #getPlayerPositionOffset(): Vector3 {
+    //     return new Vector3(0, (PLAYER_DIMENSIONS.height / 2), 0);
+    // }
 
     /**
      * Handles key press events by setting the corresponding key state to `true`.
@@ -406,7 +405,12 @@ class Player extends Group implements IMovable {
         if (this.#pointerLockControls?.isLocked) {
             if (this.#rayCastTargetBox.visible === true) {
                 const position = this.#rayCastTargetBox.position.clone();
-                this.#world.removeBlock(position.x, position.y, position.z);
+
+                const blockX = Math.floor(position.x);
+                const blockY = Math.floor(position.y);
+                const blockZ = Math.floor(position.z);
+
+                this.#world.removeBlock(blockX, blockY, blockZ);
             }
         }
     }
