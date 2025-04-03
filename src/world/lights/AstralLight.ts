@@ -56,7 +56,9 @@ abstract class AstralLight extends DirectionalLight {
         const inGameTime = this.clock.getInGameTimeInHours();
         this.#updateAngle(inGameTime);
 
-        this.#updatePosition(playerPosition);
+        const playerXZ = new Vector3(playerPosition.x, 0, playerPosition.z);
+
+        this.#updatePosition(playerXZ);
         this.#updateColorAndIntensity(inGameTime);
     }
 
@@ -78,26 +80,23 @@ abstract class AstralLight extends DirectionalLight {
     /**
      * Updates the position of the light source based on it's current angle, radius and rotation center.
      */
-    #updatePosition(playerPosition: Vector3): void {
-        const newPosition = computeOrbitPosition(new Vector3(), this.config.radius, this.angle);
-        newPosition.add(playerPosition);
+    #updatePosition(playerXZ: Vector3): void {
+        const newPosition = computeOrbitPosition(playerXZ, this.config.radius, this.angle);
         this.position.copy(newPosition);
         
         this.shadow.camera.position.copy(this.position);
         this.shadow.camera.updateProjectionMatrix();
         this.shadow.camera.updateMatrixWorld();
 
-        this.#updateMeshPosition(playerPosition);
+        this.#updateMeshOrientation(playerXZ);
     }
 
     /**
-     * Updates the mesh's position and orientation to match lights properties.
+     * Updates the mesh's orientation to match lights properties.
      */
-    #updateMeshPosition(playerPosition: Vector3): void {
+    #updateMeshOrientation(playerXZ: Vector3): void {
         if (this.#mesh) {
-            const meshPosition = computeOrbitPosition(new Vector3(), this.config.radius, this.angle);
-            this.#mesh.position.copy(meshPosition);
-            this.#mesh.lookAt(playerPosition);
+            this.#mesh.lookAt(playerXZ);
         }
     }
 
