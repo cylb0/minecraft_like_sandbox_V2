@@ -78,7 +78,7 @@ class Game {
                 accumulator -= FIXED_TIME_STEP
             }
 
-            this.#world.update();
+            this.#world.update(this.#player.position);
             
             Renderer.renderer.render(GameScene.scene, Camera.camera);
 
