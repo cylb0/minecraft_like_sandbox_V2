@@ -150,7 +150,7 @@ class Chunk extends Group {
      * Renders a chunk.
     */
     render() {
-        this.#generateMeshes();
+        requestIdleCallback(() => this.#generateMeshes());
     }
 
     /**
