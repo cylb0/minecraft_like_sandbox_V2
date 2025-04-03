@@ -67,9 +67,8 @@ class World extends Group {
             this.#previousPlayerChunkPosition = chunkKey
         }
 
-        this.sunLight?.update();
-        this.moonLight?.update();
-
+        this.sunLight?.update(playerPosition);
+        this.moonLight?.update(playerPosition);
     }
 
     /**
@@ -296,7 +295,7 @@ class World extends Group {
         this.sunLight = new SunLight(
             this.clock,
             this.config.light.sunLight,
-            new Vector3(0, 0, 0),
+            // new Vector3(0, 0, 0),
             helper
         );
         this.add(this.sunLight);
@@ -313,7 +312,7 @@ class World extends Group {
         this.moonLight = new MoonLight(
             this.clock,
             this.config.light.moonLight,
-            new Vector3(0, 0, 0),
+            // new Vector3(0, 0, 0),
             helper
         );
         this.add(this.moonLight);
