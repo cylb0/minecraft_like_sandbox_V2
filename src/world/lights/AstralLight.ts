@@ -54,11 +54,15 @@ abstract class AstralLight extends DirectionalLight {
      */
     update(playerPosition: Vector3) {
         const inGameTime = this.clock.getInGameTimeInHours();
-        this.#updateAngle(inGameTime);
 
-
-        this.#updatePosition(playerPosition);
-        this.#updateColorAndIntensity(inGameTime);
+        if (this.#isStarVisible(inGameTime)) {
+            this.visible = true;
+            this.#updateAngle(inGameTime);
+            this.#updatePosition(playerPosition);
+            this.#updateColorAndIntensity(inGameTime);
+        } else {
+            this.visible = false;
+        }
     }
 
     /**
