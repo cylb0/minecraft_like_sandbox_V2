@@ -1,4 +1,5 @@
 import { PLAYER_BASE_SPEED, PLAYER_DIMENSIONS, PLAYER_JUMP_VELOCITY, PLAYER_MAX_BLOCKS_INTERACTION_DISTANCE, PLAYER_SPAWN_POSITION } from "@/constants/player";
+import { DEFAULT_CHUNK_DIMENSIONS } from "@/constants/world";
 import Camera from "@/core/scene/Camera";
 import IMovable from "@/interfaces/IMovable";
 import { CameraMode } from "@/types/Camera";
@@ -377,7 +378,7 @@ class Player extends Group implements IMovable {
         this.#keys[event.code] = true;
 
         if (event.code === "KeyR") {
-            this.position.y = 50
+            this.position.y = DEFAULT_CHUNK_DIMENSIONS.depth - 3;
             this.#isGrounded = false
         }
 

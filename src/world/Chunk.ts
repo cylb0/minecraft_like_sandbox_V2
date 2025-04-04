@@ -385,15 +385,14 @@ class Chunk extends Group {
      */
     #generateStoneTerrain() {
         const simplex = new SimplexNoise(this.#rng);
+
         for (let x = 0; x < this.#config.size.chunkWidth; x++) {
             for (let z = 0; z < this.#config.size.chunkWidth; z++) {
                 const worldX = this.position.x + x;
                 const worldZ = this.position.z + z;
-                
-                let noiseValue = simplex.noise(worldX / this.#config.terrain.scale, worldZ / this.#config.terrain.scale);
-                const scaledNoise = this.#config.terrain.amplitude * noiseValue + .5;
-                
-                let height = scaledNoise * this.#config.size.chunkDepth;
+
+                const noiseValue = this.#computeOctaveNoise(simplex, worldX, worldZ, this.#config.terrain.amplitude);
+                const height = this.#computeHeightFromNoise(noiseValue);
 
                 for (let y = this.#config.terrain.bedrockThickness; y < this.#config.size.chunkDepth; y++) {
                     if (y < height) {
@@ -406,6 +405,64 @@ class Chunk extends Group {
                 }
             }
         }
+    }
+
+    /**
+     * Iterates over multiple octaves to create a more distributed noise.
+     * 
+     * - Each iteration adds noise at a higher frequency and lower amplitude, adding detail to the overall noise.
+     * - Persistence controls how much each octave contributes to final result.
+     * - Lacunarity controls the frequency increase between octaves.
+     * - Scale controls the size of the noise pattern.
+     * - Amplitude controls the initial amplitude of the noise pattern.
+     * 
+     * @param simplex - An instance of SimplexNoise used to generate noise.
+     * @param worldX - The world x-coordinate.
+     * @param worldZ - The world z-coordinate.
+     * @param amplitude - The initial amplitude of the noise.
+     * @returns An octave noise (between -1 and 1);
+     */
+    #computeOctaveNoise(simplex: SimplexNoise, worldX: number, worldZ: number, amplitude: number): number {
+        const OCTAVES = this.#config.terrain.octaves.count;
+        const PERSISTENCE = this.#config.terrain.octaves.persistence;
+        const LACUNARITY = this.#config.terrain.octaves.lacunarity;
+        const SCALE = this.#config.terrain.scale;
+
+        let total = 0;
+        let frequency = 1;
+        let maxValue = 0;
+
+        for (let i = 0; i < OCTAVES; i++) {
+            const noise = simplex.noise((worldX / SCALE) * frequency, (worldZ / SCALE) * frequency);
+            total += amplitude * noise
+            maxValue += amplitude;
+            amplitude *= PERSISTENCE;
+            frequency *= LACUNARITY;
+        }
+
+        return total / maxValue;
+    }
+
+    /**
+     * Compute a height in blocks based on a given noise value.
+     *
+     * - Normalizes the noise value.
+     * - Converts it to actual block height and clamps value.
+     * 
+     * @param noise - The noise to convert to actual block height.
+     * @returns A computed height value.
+     */
+    #computeHeightFromNoise(noise: number): number {
+        const chunkDepth = this.#config.size.chunkDepth;
+
+        let normalizedNoise = (noise + 1) / 2;
+        let height = normalizedNoise * chunkDepth;
+
+        if (height >= chunkDepth * .8) {
+            height = chunkDepth * .8;
+        }
+
+        return height;
     }
 
     /**

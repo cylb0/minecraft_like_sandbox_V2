@@ -10,24 +10,24 @@ export const DEFAULT_WORLD_SIZE = 2;
  * - A chunk has a fixed `size` in blocks on x and z axes.
  * - It has a fixed `depth` on y axis.
  */
-export const DEFAULT_CHUNK_DIMENSIONS = { width: 16, depth: 64 }
+export const DEFAULT_CHUNK_DIMENSIONS = { width: 16, depth: 128 }
 
 
-export const DEFAULT_NOISE_SCALE = 80;
-export const DEFAULT_NOISE_AMPLITUDE = .2;
+export const DEFAULT_NOISE_SCALE = 180;
+export const DEFAULT_NOISE_AMPLITUDE = 20;
 export const DEFAULT_OCTAVES_COUNT = 5;
-export const DEFAULT_OCTAVES_PERSISTENCE = .3;
+export const DEFAULT_OCTAVES_PERSISTENCE = .5;
 export const DEFAULT_OCTAVES_LACUNARITY = 1.8;
 
 export const DEFAULT_BEDROCK_THICKNESS = 1;
-export const DEFAULT_SEA_LEVEL = DEFAULT_CHUNK_DIMENSIONS.depth * .2;
+export const DEFAULT_SEA_LEVEL = DEFAULT_CHUNK_DIMENSIONS.depth * .35;
 export const DEFAULT_SNOW_LEVEL = DEFAULT_CHUNK_DIMENSIONS.depth * .6;
 /** Max distance in chunks to be rendered around the player's position. */
 export const DEFAULT_RENDER_RADIUS = 2;
 
 // LIGHTING
 /** Day duration in seconds. (min: 10, max: 86400 = 24h)*/
-export const DEFAULT_DAY_DURATION = 60 * 20;
+export const DEFAULT_DAY_DURATION = 20 * 60;
 
 export const DEFAULT_AMBIENTLIGHT_COLOR = 0xffffff;
 export const DEFAULT_AMBIENTLIGHT_INTENSITY = .1;
@@ -35,13 +35,13 @@ export const DEFAULT_AMBIENTLIGHT_INTENSITY = .1;
 export const DEFAULT_MOONLIGHT_OFFSET = Math.PI / 2;
 export const DEFAULT_MOONLIGHT_COLOR = 0xffffff;
 export const DEFAULT_MOONLIGHT_INTENSITY = .1;
-export const DEFAULT_MOONLIGHT_RADIUS = Math.max(DEFAULT_RENDER_RADIUS * DEFAULT_CHUNK_DIMENSIONS.width * 2, DEFAULT_CHUNK_DIMENSIONS.depth * 2);
+export const DEFAULT_MOONLIGHT_RADIUS = Math.max(DEFAULT_RENDER_RADIUS * DEFAULT_CHUNK_DIMENSIONS.width * 5, DEFAULT_CHUNK_DIMENSIONS.depth * 5);
 export const DEFAULT_MOONLIGHT_SHADOW_MAPSIZE = 1200;
 
 export const DEFAULT_SUNLIGHT_OFFSET = -Math.PI / 2;
 export const DEFAULT_SUNLIGHT_COLOR = 0xffffff;
 export const DEFAULT_SUNLIGHT_INTENSITY = 1;
-export const DEFAULT_SUNLIGHT_RADIUS = Math.max(DEFAULT_RENDER_RADIUS * DEFAULT_CHUNK_DIMENSIONS.width * 2, DEFAULT_CHUNK_DIMENSIONS.depth * 2);
+export const DEFAULT_SUNLIGHT_RADIUS = Math.max(DEFAULT_RENDER_RADIUS * DEFAULT_CHUNK_DIMENSIONS.width * 5, DEFAULT_CHUNK_DIMENSIONS.depth * 5);
 export const DEFAULT_SUNLIGHT_SHADOW_MAPSIZE = 1200;
 
 /** Gravitational acceleration (m/s²). */
