@@ -95,10 +95,11 @@ class Player extends Group implements IMovable {
      * @returns The current axis-aligned bounding box of the object.
      */
     get boundingBox(): Box3 {
-        const playerCenter = this.position.clone().add(new Vector3(0, PLAYER_DIMENSIONS.height / 2, 0));
-        return new Box3().setFromCenterAndSize(
-            playerCenter,
-            new Vector3(PLAYER_DIMENSIONS.width, PLAYER_DIMENSIONS.height, PLAYER_DIMENSIONS.depth)
+        const position = this.position.clone();
+
+        return new Box3(
+            new Vector3(position.x - PLAYER_DIMENSIONS.width / 2, position.y, position.z - PLAYER_DIMENSIONS.width / 2),
+            new Vector3(position.x + PLAYER_DIMENSIONS.width / 2, position.y + PLAYER_DIMENSIONS.height, position.z + PLAYER_DIMENSIONS.width / 2)
         );
     }
 
