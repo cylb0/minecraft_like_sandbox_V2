@@ -11,8 +11,14 @@ export const DEFAULT_WORLD_SIZE = 2;
  * - It has a fixed `depth` on y axis.
  */
 export const DEFAULT_CHUNK_DIMENSIONS = { width: 16, depth: 64 }
+
+
 export const DEFAULT_NOISE_SCALE = 80;
 export const DEFAULT_NOISE_AMPLITUDE = .2;
+export const DEFAULT_OCTAVES_COUNT = 5;
+export const DEFAULT_OCTAVES_PERSISTENCE = .3;
+export const DEFAULT_OCTAVES_LACUNARITY = 1.8;
+
 export const DEFAULT_BEDROCK_THICKNESS = 1;
 export const DEFAULT_SEA_LEVEL = DEFAULT_CHUNK_DIMENSIONS.depth * .2;
 export const DEFAULT_SNOW_LEVEL = DEFAULT_CHUNK_DIMENSIONS.depth * .6;
