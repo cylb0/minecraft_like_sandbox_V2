@@ -1,4 +1,4 @@
-import { PLAYER_DIMENSIONS, PLAYER_JUMP_VELOCITY, PLAYER_MAX_BLOCKS_INTERACTION_DISTANCE, PLAYER_SPAWN_POSITION } from "@/constants/player";
+import { PLAYER_BASE_SPEED, PLAYER_DIMENSIONS, PLAYER_JUMP_VELOCITY, PLAYER_MAX_BLOCKS_INTERACTION_DISTANCE, PLAYER_SPAWN_POSITION } from "@/constants/player";
 import Camera from "@/core/scene/Camera";
 import IMovable from "@/interfaces/IMovable";
 import { CameraMode } from "@/types/Camera";
@@ -21,7 +21,7 @@ class Player extends Group implements IMovable {
 
     #keys: { [key: string]: boolean } = {};
 
-    #baseSpeed: number = 4;
+    #baseSpeed: number = PLAYER_BASE_SPEED;
     #isGrounded = true;
     #movementDirection: Vector3 = new Vector3()
     #velocity: Vector3 = new Vector3();
