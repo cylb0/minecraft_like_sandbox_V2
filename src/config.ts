@@ -58,7 +58,7 @@ function getDefaultLightingConfig(): LightingConfig {
             defaultColor: DEFAULT_MOONLIGHT_COLOR,
             defaultIntensity: DEFAULT_MOONLIGHT_INTENSITY,
             mesh: {
-                size: DEFAULT_MOONLIGHT_RADIUS * .3,
+                size: DEFAULT_MOONLIGHT_RADIUS * .1,
             },
             radius: DEFAULT_MOONLIGHT_RADIUS,
             shadow: {
@@ -72,7 +72,7 @@ function getDefaultLightingConfig(): LightingConfig {
             defaultColor: DEFAULT_SUNLIGHT_COLOR,
             defaultIntensity: DEFAULT_SUNLIGHT_INTENSITY,
             mesh: {
-                size: DEFAULT_SUNLIGHT_RADIUS * .2,
+                size: DEFAULT_SUNLIGHT_RADIUS * .05,
             },
             radius: DEFAULT_SUNLIGHT_RADIUS,
             shadow: {
