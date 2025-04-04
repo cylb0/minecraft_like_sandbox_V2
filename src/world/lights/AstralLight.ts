@@ -56,9 +56,8 @@ abstract class AstralLight extends DirectionalLight {
         const inGameTime = this.clock.getInGameTimeInHours();
         this.#updateAngle(inGameTime);
 
-        const playerXZ = new Vector3(playerPosition.x, 0, playerPosition.z);
 
-        this.#updatePosition(playerXZ);
+        this.#updatePosition(playerPosition);
         this.#updateColorAndIntensity(inGameTime);
     }
 
@@ -80,7 +79,9 @@ abstract class AstralLight extends DirectionalLight {
     /**
      * Updates the position of the light source based on it's current angle, radius and rotation center.
      */
-    #updatePosition(playerXZ: Vector3): void {
+    #updatePosition(playerPosition: Vector3): void {
+        const playerXZ = new Vector3(playerPosition.x, 0, playerPosition.z);
+
         const newPosition = computeOrbitPosition(playerXZ, this.config.radius, this.angle);
         this.position.copy(newPosition);
         
@@ -88,7 +89,7 @@ abstract class AstralLight extends DirectionalLight {
         this.shadow.camera.updateProjectionMatrix();
         this.shadow.camera.updateMatrixWorld();
 
-        this.#updateMeshOrientation(playerXZ);
+        this.#updateMeshOrientation(playerPosition);
     }
 
     /**
