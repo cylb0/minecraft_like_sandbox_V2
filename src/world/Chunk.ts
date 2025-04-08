@@ -245,6 +245,23 @@ class Chunk extends Group {
     }
 
     /**
+     * Compute a height in blocks based on a given noise value.
+     *
+     * - Normalizes the noise value.
+     * - Converts it to actual block height and clamps value.
+     * 
+     * @param noise - The noise to convert to actual block height.
+     * @returns A computed height value.
+     */
+    #computeHeightFromNoise(noise: number, altitudeRange: [number, number] = [0, 1]): number {
+        const [min, max] = altitudeRange;
+        const chunkDepth = this.#config.size.chunkDepth;
+        
+        const heightFactor = min + (max - min) * noise;
+        return heightFactor * chunkDepth;
+    }
+
+    /**
      * Computes a weighted noise value by blending multiple biome octave patterns.
      * Iterates over multiple octaves to create a more distributed noise.
      * 
