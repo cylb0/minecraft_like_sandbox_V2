@@ -245,6 +245,49 @@ class Chunk extends Group {
     }
 
     /**
+     * Computes a weighted noise value by blending multiple biome octave patterns.
+     * Iterates over multiple octaves to create a more distributed noise.
+     * 
+     * - Each iteration adds noise at a higher frequency and lower amplitude, adding detail to the overall noise.
+     * - Persistence controls how much each octave contributes to final result.
+     * - Lacunarity controls the frequency increase between octaves.
+     * - Scale controls the size of the noise pattern.
+     * - Amplitude controls the initial amplitude of the noise pattern.
+     * 
+     * @param simplex - An instance of SimplexNoise used to generate noise.
+     * @param worldX - The world x-coordinate.
+     * @param worldZ - The world z-coordinate.
+     * @param biomeWeights - An array of biome / weight pairs for given worldX and worldZ.
+     * @returns A normalized octave noise (between 0 and 1);
+     */
+    #computeWeightedOctaveNoise(simplex: SimplexNoise, worldX: number, worldZ: number, biomeWeights: Array<BiomeWeight>): number {
+        let total = 0;
+
+        for (const { biome, weight } of biomeWeights) {
+            const { count, persistence, lacunarity } = biome.terrain.octaves;
+            const scale = biome.terrain.scale;
+
+            let value = 0;
+            let amplitude = 1;
+            let frequency = 1;
+            let maxValue = 0;
+
+            for (let i = 0; i < count; i++) {
+                const noise = simplex.noise((worldX / scale) * frequency, (worldZ / scale) * frequency);
+                value += amplitude * noise;
+                maxValue += amplitude;
+                amplitude *= persistence;
+                frequency *= lacunarity;
+            }
+
+            value = ((value / maxValue) + 1) / 2;
+            total += value * weight;
+        }
+
+        return total;
+    }
+
+    /**
      * Generates bedrock.
      *
      * - Lower layer of the map is made of special indestructible blocks.
@@ -463,6 +506,7 @@ class Chunk extends Group {
     }
 
     /**
+     * Computes a weighted noise value by blending multiple biome octave patterns.
      * Iterates over multiple octaves to create a more distributed noise.
      * 
      * - Each iteration adds noise at a higher frequency and lower amplitude, adding detail to the overall noise.
@@ -474,28 +518,34 @@ class Chunk extends Group {
      * @param simplex - An instance of SimplexNoise used to generate noise.
      * @param worldX - The world x-coordinate.
      * @param worldZ - The world z-coordinate.
-     * @param amplitude - The initial amplitude of the noise.
-     * @returns An octave noise (between -1 and 1);
+     * @param biomeWeights - An array of biome / weight pairs for given worldX and worldZ.
+     * @returns A normalized octave noise (between 0 and 1);
      */
-    #computeOctaveNoise(simplex: SimplexNoise, worldX: number, worldZ: number, amplitude: number): number {
-        const OCTAVES = this.#config.terrain.octaves.count;
-        const PERSISTENCE = this.#config.terrain.octaves.persistence;
-        const LACUNARITY = this.#config.terrain.octaves.lacunarity;
-        const SCALE = this.#config.terrain.scale;
-
+    #computeWeightedOctaveNoise(simplex: SimplexNoise, worldX: number, worldZ: number, biomeWeights: Array<BiomeWeight>): number {
         let total = 0;
-        let frequency = 1;
-        let maxValue = 0;
 
-        for (let i = 0; i < OCTAVES; i++) {
-            const noise = simplex.noise((worldX / SCALE) * frequency, (worldZ / SCALE) * frequency);
-            total += amplitude * noise
-            maxValue += amplitude;
-            amplitude *= PERSISTENCE;
-            frequency *= LACUNARITY;
+        for (const { biome, weight } of biomeWeights) {
+            const { count, persistence, lacunarity } = biome.terrain.octaves;
+            const scale = biome.terrain.scale;
+
+            let value = 0;
+            let amplitude = 1;
+            let frequency = 1;
+            let maxValue = 0;
+
+            for (let i = 0; i < count; i++) {
+                const noise = simplex.noise((worldX / scale) * frequency, (worldZ / scale) * frequency);
+                value += amplitude * noise;
+                maxValue += amplitude;
+                amplitude *= persistence;
+                frequency *= lacunarity;
+            }
+
+            value = ((value / maxValue) + 1) / 2;
+            total += value * weight;
         }
 
-        return total / maxValue;
+        return total;
     }
 
     /**
