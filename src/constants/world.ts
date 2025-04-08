@@ -12,16 +12,9 @@ export const DEFAULT_WORLD_SIZE = 2;
  */
 export const DEFAULT_CHUNK_DIMENSIONS = { width: 16, depth: 128 }
 
-
-export const DEFAULT_NOISE_SCALE = 180;
-export const DEFAULT_NOISE_AMPLITUDE = 20;
-export const DEFAULT_OCTAVES_COUNT = 5;
-export const DEFAULT_OCTAVES_PERSISTENCE = .5;
-export const DEFAULT_OCTAVES_LACUNARITY = 1.8;
-
 export const DEFAULT_BEDROCK_THICKNESS = 1;
-export const DEFAULT_SEA_LEVEL = DEFAULT_CHUNK_DIMENSIONS.depth * .35;
-export const DEFAULT_SNOW_LEVEL = DEFAULT_CHUNK_DIMENSIONS.depth * .6;
+export const DEFAULT_SEA_LEVEL = .4;
+
 /** Max distance in chunks to be rendered around the player's position. */
 export const DEFAULT_RENDER_RADIUS = 2;
 
@@ -30,7 +23,7 @@ export const DEFAULT_RENDER_RADIUS = 2;
 export const DEFAULT_DAY_DURATION = 20 * 60;
 
 export const DEFAULT_AMBIENTLIGHT_COLOR = 0xffffff;
-export const DEFAULT_AMBIENTLIGHT_INTENSITY = .1;
+export const DEFAULT_AMBIENTLIGHT_INTENSITY = 1;
 
 export const DEFAULT_MOONLIGHT_OFFSET = Math.PI / 2;
 export const DEFAULT_MOONLIGHT_COLOR = 0xffffff;

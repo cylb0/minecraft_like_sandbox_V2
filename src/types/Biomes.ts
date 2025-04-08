@@ -1,4 +1,5 @@
 import { BlockType } from "./Blocks";
+import { OctavesConfig } from "./Config";
 
 export enum BiomeType {
     Plain = 0,
@@ -14,11 +15,7 @@ export interface Biome {
     name: string;
     terrain: {
         scale: number;
-        octaves: {
-            count: number;
-            persistence: number;
-            lacunarity: number;
-        }
+        octaves: OctavesConfig,
     };
     blocks: {
         surface: BlockType;

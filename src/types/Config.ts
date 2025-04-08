@@ -16,12 +16,8 @@ export interface CloudsConfig {
 };
 
 export interface TerrainConfig {
-    amplitude: number;
     bedrockThickness: number;
-    octaves: OctavesConfig;
-    scale: number;
     seed: number;
-    snowLevel: number;
 };
 
 export interface OctavesConfig {
