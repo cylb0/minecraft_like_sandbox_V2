@@ -1,7 +1,9 @@
+import { getBiomes } from "@/constants/biomes";
 import { EMPTY_BLOCK, getOres} from "@/constants/block";
 import BlockHelper from "@/helpers/BlockHelper";
 import BlockRenderer from "@/helpers/BlockRenderer";
 import PseudoRandomGenerator from "@/helpers/PseudoRandomGenerator";
+import { Biome, BiomeType, BiomeWeight } from "@/types/Biomes";
 import { Block, BlockType, DistributionType } from "@/types/Blocks";
 import { WorldConfig } from "@/types/Config";
 import { Group, InstancedMesh, Matrix4, Vector3 } from "three";
@@ -253,6 +255,59 @@ class Chunk extends Group {
                 this.setBlockType(x, 0, z, BlockType.Bedrock);
             }
         }
+    }
+
+    /**
+     * Computes biome influence weights at given coordinates.
+     * 
+     * - It computes a temperature noise and an altitude noise.
+     * - It compares those results to each biome's temperature range and altitude ranges.
+     * - Based on distance to each biome's ranges, it defines a weight for that biome.
+     * 
+     * @param simplex - The `SimplexNoise` instance used to generate pseudo-random values.
+     * @param worldX - The world x-coordinate.
+     * @param worldZ - The world z-coordinate.
+     * @returns An array of `BiomeWeight` that will be used to generate terrain.
+     */
+    #generateBiomeWeights(simplex: SimplexNoise, worldX: number, worldZ: number): Array<BiomeWeight> {
+        const temperature = (simplex.noise(worldX / 1000, worldZ / 1000) + 1) / 2;
+        const altitude = (simplex.noise(worldX / 300, worldZ / 300) + 1) / 2;
+
+        const biomes = getBiomes();
+        const weights: Array<BiomeWeight> = [];
+
+        for (const biome of Object.values(biomes)) {
+            if (!biome) continue;
+
+            const [tMin, tMax] = biome.temperatureRange;
+            const [aMin, aMax] = biome.altitudeRange;
+
+            const tMid = (tMin + tMax) / 2;
+            const aMid = (aMin + aMax) / 2;
+
+            const tDist = temperature - tMid;
+            const aDist = altitude - aMid;
+
+            const distance = Math.sqrt(tDist * tDist + aDist * aDist);
+
+            const falloff = .4;
+            const weight = Math.max(0, 1 - distance / falloff);
+
+            if (weight > 0) {
+                weights.push({ biome, weight });
+            }
+        }
+
+        if (weights.length === 0) {
+            return [{ biome: getBiomes()[BiomeType.Ocean]!, weight: 1 }];
+        }
+
+        const totalWeights = weights.reduce((total, w) => total + w.weight, 0);
+
+        return weights.map(({ biome, weight }) => ({
+            biome,
+            weight: weight / totalWeights
+        }));
     }
 
     /**
