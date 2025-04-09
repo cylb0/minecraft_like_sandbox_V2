@@ -1,6 +1,6 @@
-import { TEXTURES } from "@/blocks/textures";
 import { Block, BlockData, BlockType, DistributionType, OreData } from "@/types/Blocks";
 import { BoxGeometry, MeshLambertMaterial } from "three";
+import { TEXTURES } from "./Textures";
 
 /** Represents the size of a block in world units. */
 export const DEFAULT_BLOCK_SIZE = 1;
@@ -131,21 +131,3 @@ export function getBlocks(): BlocksType {
     }
     return BLOCKS_CACHE;
 };
-
-let ORES_CACHE: { [key in BlockType]: OreData } | null = null;
-
-/**
- * Configuration object containing only `OreData`. It is a subset of `BLOCKS`.
- */
-export function getOres(): { [key in BlockType]: OreData } {
-    const BLOCKS = getBlocks();
-    if (!ORES_CACHE) {
-        ORES_CACHE = {
-            [BlockType.CoalOre]: BLOCKS[BlockType.CoalOre] as OreData,
-            [BlockType.IronOre]: BLOCKS[BlockType.IronOre] as OreData,
-            [BlockType.GoldOre]: BLOCKS[BlockType.GoldOre] as OreData,
-        } as { [key in BlockType]: OreData };
-    }
-
-    return ORES_CACHE; 
-}

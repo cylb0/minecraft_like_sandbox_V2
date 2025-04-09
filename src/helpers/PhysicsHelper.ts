@@ -1,4 +1,4 @@
-import { DEFAULT_BLOCK_SIZE, getBlocks } from "@/constants/block";
+import { DEFAULT_BLOCK_SIZE, getBlocks } from "@/blocks/Blocks";
 import { BlockType } from "@/types/Blocks";
 import Player from "@/units/Player";
 import { Box3, Vector3 } from "three";

@@ -1,4 +1,4 @@
-import { getBlocks } from "@/constants/block";
+import { getBlocks } from "@/blocks/Blocks";
 import { BlockType } from "@/types/Blocks";
 
 class BlockHelper {

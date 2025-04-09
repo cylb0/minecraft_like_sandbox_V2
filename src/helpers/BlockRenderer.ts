@@ -1,4 +1,4 @@
-import { DEFAULT_BLOCK_GEOMETRY, getBlocks } from "@/constants/block";
+import { DEFAULT_BLOCK_GEOMETRY, getBlocks } from "@/blocks/Blocks";
 import { BlockData, BlockType } from "@/types/Blocks";
 import { InstancedMesh, Material, MeshStandardMaterial, MeshStandardMaterialParameters } from "three";
 

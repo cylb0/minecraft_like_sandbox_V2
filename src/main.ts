@@ -3,7 +3,7 @@ import Game from "@/core/Game";
 import Scene from "@/core/scene/GameScene";
 import World from "@/world/World";
 import Player from "./units/Player";
-import { preloadTextures } from "@/blocks/textures";
+import { preloadTextures } from "@/blocks/Textures";
 import HUD from "@/ui/HUD";
 
 await preloadTextures();

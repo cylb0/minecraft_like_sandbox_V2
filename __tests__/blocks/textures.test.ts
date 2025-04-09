@@ -4,7 +4,7 @@ jest.mock("three", () => ({
     TextureLoader: require("../../__mocks__/three/Loaders").TextureLoaderMock,
 }));
 
-import { loadTexture, preloadTextures, TEXTURES } from "@/blocks/textures";
+import { loadTexture, preloadTextures, TEXTURES } from "@/blocks/Textures";
 import { NearestFilter, SRGBColorSpace } from "three";
 
 describe("Texture loading", () => {

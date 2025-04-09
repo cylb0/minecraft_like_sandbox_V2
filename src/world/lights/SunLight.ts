@@ -1,4 +1,4 @@
-import { TEXTURES } from "@/blocks/textures";
+import { TEXTURES } from "@/blocks/Textures";
 import AstralLight from "@/world/lights/AstralLight";
 import { DoubleSide, Mesh, MeshBasicMaterial, PlaneGeometry } from "three";
 
