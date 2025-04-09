@@ -15,7 +15,7 @@ export const DEFAULT_BLOCK_GEOMETRY = new BoxGeometry(DEFAULT_BLOCK_SIZE);
  * Type definition for the `BLOCKS` configuration object.
  * It maps `BlockType` enums to either `OreData`, `BlockData` or `undefined`.
  */
-type BlocksType = { [key in BlockType]?: BlockData | OreData | undefined }
+type BlocksType = Partial<Record<BlockType, BlockData | OreData>>;
 
 let BLOCKS_CACHE: BlocksType | null = null;
 

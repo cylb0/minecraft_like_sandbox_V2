@@ -475,7 +475,7 @@ class Chunk extends Group {
      */
     #generateOre(oreType: BlockType, simplex: SimplexNoise): void {
         const ores = getOres();
-        const oreData = ores[oreType];
+        const oreData = ores[oreType]!;
         for (const batch of oreData.batches) {
             const distributionType = batch.distribution;
             for (let x = 0; x < this.#config.size.chunkWidth; x++) {

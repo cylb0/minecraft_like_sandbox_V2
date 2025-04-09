@@ -1,12 +1,12 @@
 import { BlockType, OreData } from "@/types/Blocks";
 import { getBlocks } from "./Blocks";
 
-let ORES_CACHE: { [key in BlockType]: OreData } | null = null;
+let ORES_CACHE: Partial<Record<BlockType, OreData>> | null = null;
 
 /**
  * Configuration object containing only `OreData`. It is a subset of `BLOCKS`.
  */
-export function getOres(): { [key in BlockType]: OreData } {
+export function getOres(): Partial<Record<BlockType, OreData>> {
     const BLOCKS = getBlocks();
     if (!ORES_CACHE) {
         ORES_CACHE = {
