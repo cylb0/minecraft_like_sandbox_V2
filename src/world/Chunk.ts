@@ -1,6 +1,6 @@
 import { EMPTY_BLOCK } from "@/blocks/Blocks";
 import { getOres } from "@/blocks/Ores";
-import { getBiomes } from "@/constants/biomes";
+import { getBiomes } from "@/biomes/Biomes";
 import BlockHelper from "@/helpers/BlockHelper";
 import BlockRenderer from "@/helpers/BlockRenderer";
 import PseudoRandomGenerator from "@/helpers/PseudoRandomGenerator";

@@ -1,6 +1,6 @@
+import { DEFAULT_SEA_LEVEL } from "@/constants/world";
 import { Biome, BiomeType } from "@/types/Biomes";
 import { BlockType } from "@/types/Blocks";
-import { DEFAULT_SEA_LEVEL } from "./world";
 
 type BiomesType = { [key in BiomeType]?: Biome }
 
