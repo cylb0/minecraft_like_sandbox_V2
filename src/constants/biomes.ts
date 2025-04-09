@@ -22,7 +22,7 @@ export function getBiomes(): BiomesType {
                 blocks: {
                     surface: BlockType.Stone,
                 },
-                altitudeRange: [.6, .65],
+                altitudeRange: [.6, .7],
                 temperatureRange: [0.2, .7],
             },
             [BiomeType.SnowyMountain]: {
@@ -39,8 +39,8 @@ export function getBiomes(): BiomesType {
                     surface: BlockType.Snow,
                     subsurface: BlockType.Stone,
                 },
-                altitudeRange: [.65, 1],
-                temperatureRange: [.1, .6],
+                altitudeRange: [.68, 1],
+                temperatureRange: [.1, .4],
             },
             [BiomeType.Forest]: {
                 name: 'Forest',
@@ -56,7 +56,7 @@ export function getBiomes(): BiomesType {
                     surface: BlockType.Grass,
                     subsurface: BlockType.Dirt,
                 },
-                altitudeRange: [.45, .6],
+                altitudeRange: [.4, .7],
                 temperatureRange: [.3, .7],
             },
             [BiomeType.Plain]: {
@@ -73,8 +73,8 @@ export function getBiomes(): BiomesType {
                     surface: BlockType.Grass,
                     subsurface: BlockType.Dirt,
                 },
-                altitudeRange: [.4, .55],
-                temperatureRange: [.4, .8],
+                altitudeRange: [.35, .6],
+                temperatureRange: [.35, .85],
             },
             [BiomeType.Desert]: {
                 name: 'Desert',
@@ -89,8 +89,8 @@ export function getBiomes(): BiomesType {
                 blocks: {
                     surface: BlockType.Sand,
                 },
-                altitudeRange: [.35, .5],
-                temperatureRange: [.7, 1],
+                altitudeRange: [.3, .45],
+                temperatureRange: [.75, 1],
             },
             [BiomeType.Ocean]: {
                 name: 'Ocean',
@@ -105,25 +105,25 @@ export function getBiomes(): BiomesType {
                 blocks: {
                     surface: BlockType.Sand,
                 },
-                altitudeRange: [.3, DEFAULT_SEA_LEVEL],
-                temperatureRange: [.25, .6],
+                altitudeRange: [.25, DEFAULT_SEA_LEVEL],
+                temperatureRange: [.2, .6],
             },
-            [BiomeType.Beach]: {
-                name: 'Beach',
-                terrain: {
-                    scale: 120,
-                    octaves: {
-                        count: 1,
-                        persistence: 1,
-                        lacunarity: 1,
-                    },
-                },
-                blocks: {
-                    surface: BlockType.Sand,
-                },
-                altitudeRange: [DEFAULT_SEA_LEVEL, .45],
-                temperatureRange: [.25, .6],
-            }
+            // [BiomeType.Beach]: {
+            //     name: 'Beach',
+            //     terrain: {
+            //         scale: 120,
+            //         octaves: {
+            //             count: 1,
+            //             persistence: 1,
+            //             lacunarity: 1,
+            //         },
+            //     },
+            //     blocks: {
+            //         surface: BlockType.Sand,
+            //     },
+            //     altitudeRange: [DEFAULT_SEA_LEVEL, .45],
+            //     temperatureRange: [.25, .6],
+            // }
         }
     }
     return BIOMES_CACHE;
