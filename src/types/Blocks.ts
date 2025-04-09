@@ -2,6 +2,7 @@ export type {
     Block,
     BlockData,
     OreData,
+    PlantData,
     OreBatch
 } from "@/blocks/BlockTypes";
 

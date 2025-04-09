@@ -38,7 +38,8 @@ class BlockRenderer {
 
             if (type !== BlockType.Empty) {
                 const material = blockData.material ?? this.createColorMaterial(blockData!);
-                const mesh = new InstancedMesh(DEFAULT_BLOCK_GEOMETRY, material, this.#maxInstances);
+                const geometry = blockData.geometry ?? DEFAULT_BLOCK_GEOMETRY;
+                const mesh = new InstancedMesh(geometry, material, this.#maxInstances);
                 mesh.castShadow = true;
                 mesh.receiveShadow = true;
                 mesh.count = 0;

@@ -1,4 +1,4 @@
-import { ColorRepresentation, Material } from "three";
+import { BufferGeometry, ColorRepresentation, Material } from "three";
 
 export enum BlockType {
     Empty = 0,
@@ -13,6 +13,10 @@ export enum BlockType {
     IronOre = 9,
     GoldOre = 10,
     Cloud = 11,
+    GrassPlant = 12,
+    PoppyFlower = 13,
+    LilyFlower = 14,
+    DandelionFlower = 15,
 }
 
 /**
@@ -22,7 +26,6 @@ export enum DistributionType {
     Uniform,
     Triangular,
 }
-
 
 /**
  * Represents the basic data of a block.
@@ -40,12 +43,21 @@ export interface Block {
 export interface BlockData {
     /** The material or array of materials applied to a block's mesh. */
     material?: Material | Array<Material>;
+    geometry?: BufferGeometry;
     /** The fallback color for the block. */
     color?: ColorRepresentation;
     opacity?: number;
     solid?: boolean;
     hardness: number;
+    type: string;
 };
+
+/**
+ * Data needed to represent a plant.
+ */
+export interface PlantData extends BlockData {
+    material: Material | Array<Material>;
+}
 
 /**
  * Represents a batch of ore distribution within a chunk.

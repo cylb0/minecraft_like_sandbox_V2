@@ -19,6 +19,11 @@ export function getBiomes(): BiomesType {
                         lacunarity: 1.8,
                     },
                 },
+                vegetation: {
+                    grass: [
+                        { type: BlockType.GrassPlant, chance: .1 },
+                    ]
+                },
                 blocks: {
                     surface: BlockType.Stone,
                 },
@@ -56,6 +61,13 @@ export function getBiomes(): BiomesType {
                     surface: BlockType.Grass,
                     subsurface: BlockType.Dirt,
                 },
+                vegetation: {
+                    grass: [
+                        { type: BlockType.LilyFlower, chance: .02 },
+                        { type: BlockType.DandelionFlower, chance: 0.02 },
+                        { type: BlockType.GrassPlant, chance: .2 },
+                    ]
+                },
                 altitudeRange: [.4, .7],
                 temperatureRange: [.3, .7],
             },
@@ -72,6 +84,13 @@ export function getBiomes(): BiomesType {
                 blocks: {
                     surface: BlockType.Grass,
                     subsurface: BlockType.Dirt,
+                },
+                vegetation: {
+                    grass: [
+                        { type: BlockType.PoppyFlower, chance: .01 },
+                        { type: BlockType.DandelionFlower, chance: 0.04 },
+                        { type: BlockType.GrassPlant, chance: .3 },
+                    ]
                 },
                 altitudeRange: [.35, .6],
                 temperatureRange: [.35, .85],

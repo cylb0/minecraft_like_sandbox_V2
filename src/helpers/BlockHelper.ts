@@ -7,7 +7,15 @@ class BlockHelper {
      */
     static isTransparent(blockType: BlockType): boolean {
         const blockData = getBlocks()[blockType];
-        return (!blockData) || (blockData.opacity !== undefined && blockData.opacity < 1);
+        if (!blockData) return true;
+
+        if (Array.isArray(blockData.material)) {
+            return blockData.material.some(material => material.transparent);
+        }
+
+        if (blockData.material) return blockData.material.transparent;
+
+        return (blockData.opacity !== undefined && blockData.opacity < 1);
     }
 
     /**

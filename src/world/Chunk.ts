@@ -10,6 +10,8 @@ import { WorldConfig } from "@/types/Config";
 import { Group, InstancedMesh, Matrix4, Vector3 } from "three";
 
 import { SimplexNoise } from "three/examples/jsm/math/SimplexNoise";
+import { Vegetation } from "@/biomes/BiomeTypes";
+import { getPlants } from "@/blocks/Plants";
 
 /**
  * Represents a chunk in the game world containing a 3D grid of blocks.
@@ -34,12 +36,15 @@ class Chunk extends Group {
 
     #blockRenderer: BlockRenderer;
 
+    #plantGroup = new Group();
+
     constructor(seed: number, config: WorldConfig) {
         super();
         this.#rng = new PseudoRandomGenerator(seed);
         this.#config = config;
         this.#initChunk();
         this.#blockRenderer = new BlockRenderer(this.#config.size.chunkWidth * this.#config.size.chunkWidth *this.#config.size.chunkDepth);
+        this.add(this.#plantGroup);
     }
 
     /**
@@ -560,6 +565,33 @@ class Chunk extends Group {
         if (highestBlockY > 2) {
             this.setBlockType(x, highestBlockY - 1, z, biome.blocks.surface);
             this.setBlockType(x, highestBlockY - 2, z, biome.blocks.subsurface ?? biome.blocks.surface);
+            
+            if (biome.vegetation) {
+                this.#generateVegetation(x, highestBlockY, z, biome.vegetation);
+            }
+        }
+    }
+
+    /**
+     * Generates Vegetation for given coordinates.
+     * 
+     * - Uses `this.#rng` to generate pseudo random and compare it to vegetation spawn rate.
+     * 
+     * @param x - Chunk's x-coordinate.
+     * @param y - Chunk's y-coordinate.
+     * @param z - Chunk's z-coordinate.
+     * @param vegetation - The `Vegetation` object from block's `Biome` used to generate plants. 
+     * @returns 
+     */
+    #generateVegetation(x: number, y: number, z: number, vegetation: Vegetation): void {
+        if (!vegetation.grass?.length) return;
+
+        for (const grass of vegetation.grass) {
+            const chance = this.#rng.random();
+            if (chance < grass.chance) {
+                this.setBlockType(x, y, z, grass.type);
+                return;
+            }
         }
     }
 

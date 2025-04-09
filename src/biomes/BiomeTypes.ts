@@ -21,6 +21,7 @@ export interface Biome {
         surface: BlockType;
         subsurface?: BlockType;
     };
+    vegetation?: Vegetation;
     altitudeRange: [number, number];
     temperatureRange: [number, number];
 }
@@ -28,4 +29,13 @@ export interface Biome {
 export interface BiomeWeight {
     biome: Biome;
     weight: number;
+}
+
+export interface Vegetation {
+    grass?: Array<VegetationDistribution>;
+}
+
+export interface VegetationDistribution {
+    type: BlockType;
+    chance: number;
 }
