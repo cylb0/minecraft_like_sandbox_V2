@@ -2,7 +2,7 @@ import { DEFAULT_SEA_LEVEL } from "@/constants/world";
 import { Biome, BiomeType } from "@/types/Biomes";
 import { BlockType } from "@/types/Blocks";
 
-type BiomesType = { [key in BiomeType]?: Biome }
+type BiomesType = Partial<Record<BiomeType, Biome>>;
 
 let BIOMES_CACHE: BiomesType | null = null;
 
